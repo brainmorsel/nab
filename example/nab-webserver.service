@@ -1,0 +1,19 @@
+[Unit]
+Description=Network AddressBook web server
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=nab
+Group=nab
+ExecStart=/opt/nab/venv/bin/nab-webserver --config /opt/nab/config/config-webserver.yaml
+
+# Give a reasonable amount of time for the server to start up/shut down
+TimeoutSec=30
+# Value can be one of inherit, null, tty, journal, syslog, kmsg, journal+console, syslog+console, kmsg+console or socket
+#StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
+

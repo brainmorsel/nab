@@ -1,0 +1,17 @@
+include: config-base.yaml
+
+auth:
+  ldap:
+    url: ldap://HOSTNAME:389
+    basedn: dc=example,dc=com
+
+webserver:
+  # Fernet key must be 32 bytes.
+  cookie_secret: 0123456789ABCDEF0123456789ABCDEF
+  listen: 0.0.0.0
+  port: 8081
+
+logging:
+  handlers:
+    file:
+      filename: /path/to/logs/webserver.log

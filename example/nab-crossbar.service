@@ -1,0 +1,19 @@
+[Unit]
+Description=Network AddressBook crossbar node
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=nab
+Group=nab
+ExecStart=/opt/crossbar/bin/crossbar start --cbdir /opt/nab/.crossbar/
+
+# Give a reasonable amount of time for the server to start up/shut down
+TimeoutSec=30
+# Value can be one of inherit, null, tty, journal, syslog, kmsg, journal+console, syslog+console, kmsg+console or socket
+#StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
+

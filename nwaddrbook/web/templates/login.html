@@ -1,0 +1,9 @@
+{% if success %}
+<div>Welcome {{ username }}. <a href="/logout">Logout</a></div>
+{% else %}
+<form method="POST">
+    Username: <input type="text" name="username" value="{{ username }}"></br>
+    Password: <input type="password" name="password"></br>
+    <input type="submit" value="Login">
+</form>
+{% endif %}

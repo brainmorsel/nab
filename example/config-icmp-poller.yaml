@@ -1,0 +1,10 @@
+include: config-base.yaml
+
+runas:
+  user: USER
+  group: GROUP
+
+logging:
+  handlers:
+    file:
+      filename: /path/to/logs/icmp-poller.log
