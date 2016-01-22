@@ -8,12 +8,7 @@
 
 Серверная часть написана на Python 3.5, клиентская на JavaScript (ES6) с использованием React и Redux.
 
-# Create Database
-
-    sudo -u postgres psql -c "CREATE USER nwaddrbook_user WITH PASSWORD 'nwaddrbook_pw';"
-    sudo -u postgres psql -c "CREATE DATABASE nwaddrbookdb WITH OWNER = nwaddrbook_user;"
-
-# Установка
+## Установка
 
 Создаём системного пользователя:
 
