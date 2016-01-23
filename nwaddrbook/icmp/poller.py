@@ -29,7 +29,6 @@ class TargetsList:
         self._store_metrics = store_metrics
         self._metrics = {}
         self._statuses = {}
-        self._extras = {}
 
         self._set_all = set()
         self._set_alive = set()
@@ -132,20 +131,15 @@ class TargetsList:
             return self._statuses[target]
         return self.STATUS_UNKNOWN
 
-    def get_extra(self, target):
-        return self._extras[target]
-
     def len(self):
         return len(self._targets)
 
-    def add(self, target, extra=None):
+    def add(self, target):
         if target not in self._set_all:
             self._targets.append(target)
             self._metrics[target] = collections.deque(maxlen=self._store_metrics)
             self._statuses[target] = self.STATUS_UNKNOWN
             self._set_all.add(target)
-        # update extra anyway
-        self._extras[target] = extra
 
     def get(self, idx):
         return self._targets[idx]
@@ -155,14 +149,17 @@ class TargetsList:
 
         del self._metrics[target]
         del self._statuses[target]
-        del self._extras[target]
         self._set_all.discard(target)
         self._set_alive.discard(target)
 
         if idx < self._next_idx:
             self._next_idx -= 1
-        elif self._next_idx >= self._targets.len():
+        elif self._next_idx >= len(self._targets):
             self._next_idx = 0
+
+    def remove(self, target):
+        idx = self._targets.index(target)
+        self._remove(idx)
 
     def next(self):
         target = self.get(self._next_idx)

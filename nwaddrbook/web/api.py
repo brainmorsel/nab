@@ -603,6 +603,8 @@ class Handlers:
                 'host_id': host_id,
                 'ip_id': ip_id,
             })
+            self.wamp.publish('data.host_ip.change')
+
         return 'ok'
 
     async def host_mac_save(self, addr, host_id, interface_name=None, mac_id=None):
@@ -630,6 +632,7 @@ class Handlers:
             await cur.execute(sql, {
                 'ip_id': ip_id,
             })
+            self.wamp.publish('data.host_ip.change')
         return 'ok'
 
     async def host_mac_delete(self, mac_id):
