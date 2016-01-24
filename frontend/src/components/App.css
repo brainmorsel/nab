@@ -48,8 +48,8 @@ article {
 }
 
 aside > .header {
-  font-size: 150%;
-  border-bottom: 1px dashed black;
+  font-size: 16pt;
+  border-bottom: 1px solid black;
   display: flex;
 }
 

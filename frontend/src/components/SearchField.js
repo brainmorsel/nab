@@ -10,11 +10,14 @@ import Icon from './Icon.js';
 
 
 const searchQuerySelector = state => state.data.search.query;
+const searchFetchingSelector = state => state.data.search.fetching;
 const itemsSelector = createSelector(
   searchQuerySelector,
-  (query) => {
+  searchFetchingSelector,
+  (query, fetching) => {
     return {
       query,
+      fetching,
     }
   }
 );
@@ -40,11 +43,11 @@ export default class SearchField extends Component {
   }
 
   render() {
-    const { query } = this.props;
+    const { query, fetching } = this.props;
 
     return (
       <div {...this.props}>
-        <Icon name='search' fixedWidth />
+        {fetching ? <Icon name='spinner' spin fixedWidth /> : <Icon name='search' fixedWidth />}
         <input type='text' placeholder='search...' value={query} onChange={this.handleQueryChange.bind(this)}/>
         {query.length > 0 ? <Icon className='clickable' name='times' fixedWidth onClick={this.handleQueryClear.bind(this)} /> : ''}
       </div>

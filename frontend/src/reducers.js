@@ -211,6 +211,11 @@ export const data = handleActions({
       search: {results: action.payload}
     }, state);
   },
+  DATA_SEARCH_FETCHING_SET: (state, action) => {
+    return u({
+      search: {fetching: action.payload}
+    }, state);
+  },
 }, {
   menu: {
     groups: [],
@@ -233,6 +238,7 @@ export const data = handleActions({
     filterAddr: '',
   },
   search: {
+    fetching: false,
     query: '',
     results: [],
   }

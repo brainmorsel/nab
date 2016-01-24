@@ -458,7 +458,10 @@ export const loadSearchResults = (query) => {
     dispatch(dataSearchQuerySet(query)); 
     if (query.length == 0) {
       dispatch(dataSearchResultsSet([]));
+      dispatch(dataSearchFetchingSet(false));
+      return;
     }
+    dispatch(dataSearchFetchingSet(true));
     setTimeout(() => {
       const state = getState();
       const q = query.trim();
@@ -491,8 +494,10 @@ export const loadSearchResults = (query) => {
                 dispatch(loadHostsBatch(unloaded_hosts));
               }
               dispatch(dataSearchResultsSet(result));
+              dispatch(dataSearchFetchingSet(false));
             } else {
               dispatch(errorsAddMessage(response.data.error));
+              dispatch(dataSearchFetchingSet(false));
             }
           })
           .catch(error => {
@@ -548,3 +553,4 @@ export const dataEventsFilterAddrSet = createAction('DATA_EVENTS_FILTER_ADDR_SET
 
 export const dataSearchQuerySet = createAction('DATA_SEARCH_QUERY_SET');
 export const dataSearchResultsSet = createAction('DATA_SEARCH_RESULTS_SET');
+export const dataSearchFetchingSet = createAction('DATA_SEARCH_FETCHING_SET');

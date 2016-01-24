@@ -133,33 +133,31 @@ export default class App extends Component {
             <SearchField className='header'/>
 
             <div className='content'>
-              {data.search.query.length > 0
-                ? <SearchResults className='treemenu' />
-                : <ul className='treemenu'>
-                    <MenuItemGroup
-                      group={{name: 'Хосты', children: data.menu.groups}}
-                      />
-                    <MenuItemNetwork
-                      name='Сети'
-                      iconName='folder'
-                      items={data.menu.networks}
-                      getItemData={this.getItemData.bind(this)}
-                      loadNetworkItems={this.props.actions.loadNetworkItems}
-                      />
-                    <MenuItemGroupTypes
-                      name='Типы групп'
-                      iconName='folder'
-                      getData={this.props.actions.getGroupTypesAsync}
-                      items={Object.keys(data.group_types).map(id => data.group_types[id])}
-                      />
-                    <MenuItemHostTypes
-                      name='Типы хостов'
-                      iconName='folder'
-                      getData={this.props.actions.getHostTypesAsync}
-                      items={Object.keys(data.host_types).map(id => data.host_types[id])}
-                      />
-                  </ul>
-              }
+              <SearchResults style={{display: data.search.query.length > 0 ? '' : 'none'}} className='treemenu' />
+              <ul style={{display: data.search.query.length > 0 ? 'none' : ''}} className='treemenu'>
+                <MenuItemGroup
+                  group={{name: 'Хосты', children: data.menu.groups}}
+                  />
+                <MenuItemNetwork
+                  name='Сети'
+                  iconName='folder'
+                  items={data.menu.networks}
+                  getItemData={this.getItemData.bind(this)}
+                  loadNetworkItems={this.props.actions.loadNetworkItems}
+                  />
+                <MenuItemGroupTypes
+                  name='Типы групп'
+                  iconName='folder'
+                  getData={this.props.actions.getGroupTypesAsync}
+                  items={Object.keys(data.group_types).map(id => data.group_types[id])}
+                  />
+                <MenuItemHostTypes
+                  name='Типы хостов'
+                  iconName='folder'
+                  getData={this.props.actions.getHostTypesAsync}
+                  items={Object.keys(data.host_types).map(id => data.host_types[id])}
+                  />
+              </ul>
             </div>
           </aside>
 

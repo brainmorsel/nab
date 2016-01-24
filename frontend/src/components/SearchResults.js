@@ -12,13 +12,16 @@ import MenuItemGroup from './MenuItemGroup.js';
 
 const searchResultsSelector = state => state.data.search.results;
 const searchQuerySelector = state => state.data.search.query;
+const searchFetchingSelector = state => state.data.search.fetching;
 const itemsSelector = createSelector(
   searchResultsSelector,
   searchQuerySelector,
-  (results, query) => {
+  searchFetchingSelector,
+  (results, query, fetching) => {
     return {
       results,
       query,
+      fetching,
     }
   }
 );
@@ -26,11 +29,11 @@ const itemsSelector = createSelector(
 @connect(itemsSelector)
 export default class SearchResults extends Component {
   render() {
-    const { results, query } = this.props;
+    const { results, query, fetching } = this.props;
 
     if (query.length < 3) {
       return (
-        <ul>
+        <ul {...this.props}>
           <li>Запрос должен быть не короче 3-х символов.</li>
         </ul>
       );
@@ -38,8 +41,8 @@ export default class SearchResults extends Component {
 
     if (results.length == 0) {
       return (
-        <ul>
-          <li>Ничего не найдено.</li>
+        <ul {...this.props}>
+          <li>{fetching ? 'Loading...' : 'Ничего не найдено.'}</li>
         </ul>
       );
     }
