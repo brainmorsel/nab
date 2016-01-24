@@ -201,6 +201,16 @@ export const data = handleActions({
       events: {filterAddr: action.payload}
     }, state);
   },
+  DATA_SEARCH_QUERY_SET: (state, action) => {
+    return u({
+      search: {query: action.payload}
+    }, state);
+  },
+  DATA_SEARCH_RESULTS_SET: (state, action) => {
+    return u({
+      search: {results: action.payload}
+    }, state);
+  },
 }, {
   menu: {
     groups: [],
@@ -221,6 +231,10 @@ export const data = handleActions({
     fetchPeriod: 60,
     filterType: 'all',
     filterAddr: '',
+  },
+  search: {
+    query: '',
+    results: [],
   }
 });
 

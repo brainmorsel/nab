@@ -176,6 +176,10 @@ aside > .content {
 */
 
 
+.clickable {
+  cursor: pointer;
+}
+
 
 nav {
   display: flex;

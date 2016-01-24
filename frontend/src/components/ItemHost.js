@@ -47,6 +47,14 @@ export default class ItemHost extends Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    const { host_id, item, actions: { loadHostsBatch } } = nextProps;
+    if (!item) {
+      loadHostsBatch([host_id, ])
+        .catch(e => { console.log('ERROR:', e) });
+    }
+  }
+
   renderChildren(item) {
     return React.Children.map(
       this.props.children,

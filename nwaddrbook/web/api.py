@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 
 from psycopg2.extras import Json
 
@@ -725,3 +726,40 @@ class Handlers:
         return {
             'events': result
         }
+
+    async def search(self, q):
+        result = []
+        _q = '%'+q+'%'
+
+        with (await self.db.cursor()) as cur:
+            if re.match('([0-9]+\.)|(\.[0-9]+)', q):
+                # looks like part of ip addr
+                sql = 'SELECT ip_id, host_id, interface_name, network_id, addr FROM host_ip WHERE addr::text LIKE %(q)s ORDER BY addr'
+                await cur.execute(sql, {'q': _q})
+                for id, host_id, interface_name, network_id, addr in await cur.fetchall():
+                    result.append({
+                        'type': 'host_ip',
+                        'ip_id': id,
+                        'host_id': host_id,
+                        'interface_name': interface_name,
+                        'network_id': network_id,
+                        'addr': addr,
+                    })
+            sql = 'SELECT host_id, name FROM host WHERE name LIKE %(q)s ORDER BY name'
+            await cur.execute(sql, {'q': _q})
+            for host_id, name in await cur.fetchall():
+                result.append({
+                    'type': 'host',
+                    'host_id': host_id,
+                    'name': name,
+                })
+            sql = 'SELECT group_id, name FROM "group" WHERE name LIKE %(q)s ORDER BY name'
+            await cur.execute(sql, {'q': _q})
+            for group_id, name in await cur.fetchall():
+                result.append({
+                    'type': 'group',
+                    'group_id': group_id,
+                    'name': name,
+                })
+
+        return result

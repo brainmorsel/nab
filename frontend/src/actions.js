@@ -453,6 +453,57 @@ export const loadGroupsBatch = (ids) => {
 }
 
 
+export const loadSearchResults = (query) => {
+  return (dispatch, getState) => {
+    dispatch(dataSearchQuerySet(query)); 
+    if (query.length == 0) {
+      dispatch(dataSearchResultsSet([]));
+    }
+    setTimeout(() => {
+      const state = getState();
+      const q = query.trim();
+
+      if (state.data.search.query == q && q.length >= 3) {
+        webapi.call('search', {q})
+          .then(response => {
+            const result = response.data.result;
+            if (response.data.success) {
+              let unloaded_groups = [];
+              let unloaded_hosts = [];
+              for (let i = 0; i < result.length; i++) {
+                let r = result[i];
+                switch (r.type) {
+                  case 'group':
+                    if (!state.data.groups[r.group_id]) {
+                      unloaded_groups.push(r.group_id);
+                    }
+                    break;
+                  case 'host':
+                    if (!state.data.hosts[r.host_id]) {
+                      unloaded_hosts.push(r.host_id);
+                    }
+                }
+              }
+              if (unloaded_groups.length > 0) {
+                dispatch(loadGroupsBatch(unloaded_groups));
+              }
+              if (unloaded_hosts.length > 0) {
+                dispatch(loadHostsBatch(unloaded_hosts));
+              }
+              dispatch(dataSearchResultsSet(result));
+            } else {
+              dispatch(errorsAddMessage(response.data.error));
+            }
+          })
+          .catch(error => {
+            dispatch(errorsAddMessage(error));
+          })
+      }
+    }, 500);
+  };
+}
+
+
 
 function saveItem(dispatch, type, data) {
   return apiCallItemMethod(dispatch, 'save', {type}, data);
@@ -494,3 +545,6 @@ export const dataEventsListUpdate = createAction('DATA_EVENTS_LIST_UPDATE');
 export const dataEventsFetchPeriodSet = createAction('DATA_EVENTS_FETCH_PERIOD_SET');
 export const dataEventsFilterTypeSet = createAction('DATA_EVENTS_FILTER_TYPE_SET');
 export const dataEventsFilterAddrSet = createAction('DATA_EVENTS_FILTER_ADDR_SET');
+
+export const dataSearchQuerySet = createAction('DATA_SEARCH_QUERY_SET');
+export const dataSearchResultsSet = createAction('DATA_SEARCH_RESULTS_SET');

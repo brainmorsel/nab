@@ -1,10 +1,44 @@
 import React, { Component, PropTypes } from 'react';
+import { connect } from 'react-redux';
+import * as actions from '../actions';
+import { bindActionCreators } from 'redux';
+import { createSelector } from 'reselect';
+
 import MenuItem from './MenuItem';
 import Icon from './Icon.js';
 import GroupLabel from './GroupLabel.js';
 import HostLabel from './HostLabel.js';
 
 
+const hostsSelector = state => state.data.hosts;
+const groupsSelector = state => state.data.groups;
+const groupIdSelector = (state, props) => props.group_id;
+const propsGroupSelector = (state, props) => props.group;
+const itemsSelector = createSelector(
+  hostsSelector,
+  groupsSelector,
+  groupIdSelector,
+  propsGroupSelector,
+  (hosts, groups, group_id, propsGroup) => {
+    const group = groups[group_id] || propsGroup;
+    const children = (group || {}).children;
+    return {
+      hosts,
+      groups,
+      group_id,
+      group,
+      children,
+    }
+  }
+);
+
+function mapActionsToProps(dispatch) {
+  return {
+    actions: bindActionCreators(actions, dispatch),
+  };
+}
+
+@connect(itemsSelector, mapActionsToProps)
 export default class MenuItemGroup extends Component {
   constructor(props) {
     super(props);
@@ -22,7 +56,7 @@ export default class MenuItemGroup extends Component {
   }
 
   handleReload() {
-    const { loadGroupItems, group_id } = this.props;
+    const { actions: { loadGroupItems }, group_id } = this.props;
 
     if (!this.state.isFetching) {
       this.setState({isFetching: true});
@@ -41,9 +75,9 @@ export default class MenuItemGroup extends Component {
   }
 
   render() {
-    const { getItemData, name, items, group_id } = this.props;
     const { isOpen, isFetching } = this.state;
-    const curItem = getItemData({type: 'group', group_id}) || {name, icon_name: this.props.iconName};
+    const { children, group, groups, hosts } = this.props;
+    const curItem = group;
 
     const hoverButtons = [
       <Icon key='reload' fixedWidth name='refresh' onClick={this.handleReload.bind(this)} className='reload' title='Обновить'/>
@@ -60,15 +94,15 @@ export default class MenuItemGroup extends Component {
         onClick={this.handleClick.bind(this)}
         hoverButtons={hoverButtons}
         >
-            { items && items.length > 0
-                ? items.map(item => (()=>{
+            { children && children.length > 0
+                ? children.map(item => (()=>{
                   switch (item.type) {
                     case 'group': {
-                      let {group_id, name, children} = getItemData(item);
-                      return <MenuItemGroup {...this.props} key={`group${group_id}`} group_id={group_id} name={name} items={children}/>
+                      let {group_id, name} = groups[item.group_id];
+                      return <MenuItemGroup key={`group${group_id}`} group_id={group_id} />
                     }
                     case 'host': {
-                      let host = getItemData(item);
+                      let host = hosts[item.host_id];
                       return (
                         <MenuItem
                           label={<HostLabel isLink host={host}/>}

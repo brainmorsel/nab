@@ -13,8 +13,9 @@ import MenuItemGroup from './MenuItemGroup.js';
 import MenuItemGroupTypes from './MenuItemGroupTypes.js';
 import MenuItemHostTypes from './MenuItemHostTypes.js';
 import MenuItemNetwork from './MenuItemNetwork.js';
-import Icon from './Icon.js';
 import FormButton from './FormButton';
+import SearchField from './SearchField.js';
+import SearchResults from './SearchResults.js';
 
 
 // Which props do we want to inject, given the global state?
@@ -129,41 +130,36 @@ export default class App extends Component {
         <div className='app-wrap'>
         <main>
           <aside>
-            <div className='header'>
-              <Icon name='search' fixedWidth />
-              <input type='text' placeholder='search not working now' />
-              <Icon name='times' fixedWidth />
-            </div>
+            <SearchField className='header'/>
 
             <div className='content'>
-              <ul className='treemenu'>
-                <MenuItemGroup
-                  name='Хосты'
-                  iconName='folder'
-                  items={data.menu.groups}
-                  getItemData={this.getItemData.bind(this)}
-                  loadGroupItems={this.props.actions.loadGroupItems}
-                  />
-                <MenuItemNetwork
-                  name='Сети'
-                  iconName='folder'
-                  items={data.menu.networks}
-                  getItemData={this.getItemData.bind(this)}
-                  loadNetworkItems={this.props.actions.loadNetworkItems}
-                  />
-                <MenuItemGroupTypes
-                  name='Типы групп'
-                  iconName='folder'
-                  getData={this.props.actions.getGroupTypesAsync}
-                  items={Object.keys(data.group_types).map(id => data.group_types[id])}
-                  />
-                <MenuItemHostTypes
-                  name='Типы хостов'
-                  iconName='folder'
-                  getData={this.props.actions.getHostTypesAsync}
-                  items={Object.keys(data.host_types).map(id => data.host_types[id])}
-                  />
-              </ul>
+              {data.search.query.length > 0
+                ? <SearchResults className='treemenu' />
+                : <ul className='treemenu'>
+                    <MenuItemGroup
+                      group={{name: 'Хосты', children: data.menu.groups}}
+                      />
+                    <MenuItemNetwork
+                      name='Сети'
+                      iconName='folder'
+                      items={data.menu.networks}
+                      getItemData={this.getItemData.bind(this)}
+                      loadNetworkItems={this.props.actions.loadNetworkItems}
+                      />
+                    <MenuItemGroupTypes
+                      name='Типы групп'
+                      iconName='folder'
+                      getData={this.props.actions.getGroupTypesAsync}
+                      items={Object.keys(data.group_types).map(id => data.group_types[id])}
+                      />
+                    <MenuItemHostTypes
+                      name='Типы хостов'
+                      iconName='folder'
+                      getData={this.props.actions.getHostTypesAsync}
+                      items={Object.keys(data.host_types).map(id => data.host_types[id])}
+                      />
+                  </ul>
+              }
             </div>
           </aside>
 
