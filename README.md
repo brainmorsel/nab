@@ -17,7 +17,7 @@
 
 Копируем файлы в место установки:
 
-    git clone ... nab/
+    git clone https://github.com/the-invoice/nab.git nab/
     sudo cp -r nab/* /opt/nab/
     sudo chown -R nab. /opt/nab/
 
