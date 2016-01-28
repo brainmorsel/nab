@@ -5,7 +5,7 @@ from datetime import datetime
 
 from .protocol import PacketBuilder
 from .protocol import Sequence
-from .sched import TimeoutScheduler
+from ..sched import TimeoutScheduler
 
 
 class TargetsList:
