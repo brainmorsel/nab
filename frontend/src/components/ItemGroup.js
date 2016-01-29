@@ -20,12 +20,14 @@ const itemsSelector = createSelector(
   groupsSelector,
   groupIdSelector,
   groupTypesSelector,
-  (groups, group_id, groupTypes) => {
+  hostTypesSelector,
+  (groups, group_id, groupTypes, hostTypes) => {
     return {
       groups,
       group_id,
       item: groups[group_id],
       groupTypes,
+      hostTypes,
     }
   }
 );
