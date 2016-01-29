@@ -216,6 +216,21 @@ export const data = handleActions({
       search: {fetching: action.payload}
     }, state);
   },
+  DATA_EVENTS_ARCHIVE_ITEMS_SET: (state, action) => {
+    return u({
+      events_archive: {items: action.payload}
+    }, state);
+  },
+  DATA_EVENTS_ARCHIVE_START_TIME_SET: (state, action) => {
+    return u({
+      events_archive: {start_time: action.payload}
+    }, state);
+  },
+  DATA_EVENTS_ARCHIVE_END_TIME_SET: (state, action) => {
+    return u({
+      events_archive: {end_time: action.payload}
+    }, state);
+  },
 }, {
   menu: {
     groups: [],
@@ -236,6 +251,11 @@ export const data = handleActions({
     fetchPeriod: 60,
     filterType: 'all',
     filterAddr: '',
+  },
+  events_archive: {
+    items: [],
+    start_time: null,
+    end_time: null,
   },
   search: {
     fetching: false,

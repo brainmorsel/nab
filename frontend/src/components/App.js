@@ -125,6 +125,7 @@ export default class App extends Component {
         <nav>
           <Link to={urls.home()}>Home</Link>
           <Link to={urls.events.show()}>Events</Link>
+          <Link to={urls.events.archive()}>Events Archive</Link>
         </nav>
 
         <div className='app-wrap'>

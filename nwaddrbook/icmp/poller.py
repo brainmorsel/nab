@@ -1,7 +1,6 @@
 import os
 import socket
 import collections
-from datetime import datetime
 
 from .protocol import PacketBuilder
 from .protocol import Sequence
@@ -11,10 +10,9 @@ from ..sched import TimeoutScheduler
 class TargetsList:
     "Список основных целей для опроса"
 
-    STATUS_UNKNOWN = 'unknown'
-    STATUS_ALIVE = 'alive'
-    STATUS_UNREACHABLE = 'unreachable'
-    STATUS_FLAPPING = 'flapping'
+    STATUS_UNKNOWN = 1
+    STATUS_ALIVE = 2
+    STATUS_UNREACHABLE = 3
 
     def __init__(self, period=3.0, store_metrics=5):
         self._targets = []
@@ -33,7 +31,10 @@ class TargetsList:
         self._set_all = set()
         self._set_alive = set()
 
-        self.events = collections.deque(maxlen=1000)
+        self._cb_status_change = None
+
+    def on_status_change(self, callback):
+        self._cb_status_change = callback
 
     def register_poller(self, sender_id, poller):
         self._poller = poller
@@ -82,15 +83,8 @@ class TargetsList:
                 self._set_alive.discard(target)
 
             # print('CHANGE STATUS', target, last_status, '->', new_status)
-
-            if new_status == self.STATUS_UNREACHABLE or last_status != self.STATUS_UNKNOWN:
-                event_time = datetime.now()
-                event_source = target
-                event_from_state = last_status
-                event_to_state = new_status
-
-                event = (event_time, event_source, event_from_state, event_to_state)
-                self.events.appendleft(event)
+            if self._cb_status_change:
+                self._cb_status_change(target, last_status, new_status)
 
     def put_metric(self, target, measure):
         clock_time = None
@@ -134,11 +128,11 @@ class TargetsList:
     def len(self):
         return len(self._targets)
 
-    def add(self, target):
+    def add(self, target, status=1):
         if target not in self._set_all:
             self._targets.append(target)
             self._metrics[target] = collections.deque(maxlen=self._store_metrics)
-            self._statuses[target] = self.STATUS_UNKNOWN
+            self._statuses[target] = status  # default: STATUS_UNKNOWN
             self._set_all.add(target)
 
     def get(self, idx):

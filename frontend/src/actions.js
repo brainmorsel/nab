@@ -1,4 +1,5 @@
 import { createAction } from 'redux-actions';
+import moment from 'moment';
 import * as webapi from './webapi';
 
 export const globalSpinnerJobStart = createAction('GLOBAL_SPINNER_JOB_START');
@@ -455,7 +456,7 @@ export const loadGroupsBatch = (ids) => {
 
 export const loadSearchResults = (query) => {
   return (dispatch, getState) => {
-    dispatch(dataSearchQuerySet(query)); 
+    dispatch(dataSearchQuerySet(query));
     if (query.length == 0) {
       dispatch(dataSearchResultsSet([]));
       dispatch(dataSearchFetchingSet(false));
@@ -508,7 +509,56 @@ export const loadSearchResults = (query) => {
   };
 }
 
+export const loadEventsArchive = () => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const { start_time, end_time } = state.data.events_archive;
 
+    if (!(start_time && end_time)) {
+      console.log('no range');
+      return;
+    }
+    if (!start_time._isAMomentObject) {
+      return;
+    }
+
+    if (!end_time._isAMomentObject) {
+      return;
+    }
+
+    const params = {
+      start_time: moment(start_time).format('X'),
+      end_time: moment(end_time).format('X'),
+    }
+
+    webapi.call('events_archive_get', params)
+      .then(response => {
+          if (response.data.success) {
+            const state = getState();
+            const { result } = response.data;
+
+            let unloaded_hosts = [];
+            for (let i = 0; i < result.length; i++) {
+              let r = result[i];
+
+              if (!state.data.hosts[r.host_id]) {
+                unloaded_hosts.push(r.host_id);
+              }
+            }
+            if (unloaded_hosts.length > 0) {
+              dispatch(loadHostsBatch(unloaded_hosts));
+            }
+
+            dispatch(dataEventsArchiveItemsSet(result));
+          } else {
+            dispatch(errorsAddMessage(response.data.error));
+          }
+      })
+      .catch(error => {
+        dispatch(errorsAddMessage(error));
+      })
+  }
+}
 
 function saveItem(dispatch, type, data) {
   return apiCallItemMethod(dispatch, 'save', {type}, data);
@@ -554,3 +604,7 @@ export const dataEventsFilterAddrSet = createAction('DATA_EVENTS_FILTER_ADDR_SET
 export const dataSearchQuerySet = createAction('DATA_SEARCH_QUERY_SET');
 export const dataSearchResultsSet = createAction('DATA_SEARCH_RESULTS_SET');
 export const dataSearchFetchingSet = createAction('DATA_SEARCH_FETCHING_SET');
+
+export const dataEventsArchiveItemsSet = createAction('DATA_EVENTS_ARCHIVE_ITEMS_SET');
+export const dataEventsArchiveStartTimeSet = createAction('DATA_EVENTS_ARCHIVE_START_TIME_SET');
+export const dataEventsArchiveEndTimeSet = createAction('DATA_EVENTS_ARCHIVE_END_TIME_SET');

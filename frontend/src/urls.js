@@ -5,6 +5,7 @@ export default {
     home: () => prefix,
     events: {
       show: () => `${prefix}events/`,
+      archive: () => `${prefix}events/archive`,
     },
     group: {
       show: (group_id='') => `${prefix}group/${group_id}`,

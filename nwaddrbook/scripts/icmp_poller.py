@@ -1,9 +1,12 @@
 import logging
 import asyncio
 import signal
+import collections
+from datetime import datetime
 
 import click
 import aiopg
+from psycopg2.extras import Json
 
 from .. import conf
 from ..wamp import ApplicationSession, ApplicationRunner
@@ -30,10 +33,13 @@ class MyComponent(ApplicationSession):
 
         self.poller = poller.Poller(loop=loop)
         self.main_targets = poller.TargetsList(period=60.0, store_metrics=10)
+        self.main_targets.on_status_change(self.handle_status_change)
         self.poller.add_target_list(self.main_targets)
 
         self._targets_by_id = {}
         self._targets_by_addr = {}
+
+        self.events = collections.deque(maxlen=1000)
 
     async def onJoin(self, details):
         logging.info("Session joined.")
@@ -68,17 +74,65 @@ class MyComponent(ApplicationSession):
         if not wasClean:
             self.loop.stop()
 
-    def _add_target(self, target):
+    def handle_status_change(self, addr, last_status, new_status):
+        timestamp = datetime.now()
+        if new_status == poller.TargetsList.STATUS_UNREACHABLE or last_status != poller.TargetsList.STATUS_UNKNOWN:
+            event_time = timestamp
+            event_source = addr
+            event_from_state = last_status
+            event_to_state = new_status
+
+            event = (event_time, event_source, event_from_state, event_to_state)
+            self.events.appendleft(event)
+
+        self.loop.create_task(self.put_event_in_db(timestamp, addr, last_status, new_status))
+
+    async def put_event_in_db(self, timestamp, addr, last_status, new_status):
+        status_id2name = {
+            poller.TargetsList.STATUS_UNKNOWN: 'unknown',
+            poller.TargetsList.STATUS_ALIVE: 'alive',
+            poller.TargetsList.STATUS_UNREACHABLE: 'unreachable',
+        }
+        sql_update_status = '''
+            UPDATE host_ip_icmp_status SET icmp_status = %(status)s, last_change_time = now()
+            WHERE ip_id = %(ip_id)s
+        '''
+        sql_new_event_in_archive = '''
+            INSERT INTO events_archive (host_id, ip_id, service_type, severity, event_time, data)
+            VALUES (%(host_id)s, %(ip_id)s, 'icmp', %(severity)s, %(time)s, %(data)s)
+        '''
+        SEVERITY_CRITICAL = 4
+        SEVERITY_OK = 5
+        target = self._targets_by_addr[addr]
+        if new_status == poller.TargetsList.STATUS_ALIVE:
+            severity = SEVERITY_OK
+        else:
+            severity = SEVERITY_CRITICAL
+        data = {
+            'from': status_id2name[last_status],
+            'to': status_id2name[new_status]
+        }
+        with (await self.db.cursor()) as cur:
+            await cur.execute(sql_update_status, dict(status=new_status, ip_id=target.id))
+            await cur.execute(sql_new_event_in_archive, dict(
+                host_id=target.host_id,
+                ip_id=target.id,
+                severity=severity,
+                time=timestamp,
+                data=Json(data)
+            ))
+
+    def _add_target(self, target, icmp_status):
         if target.id in self._targets_by_id:
             old_target = self._targets_by_id[target.id]
             if target.addr != old_target.addr:
                 self.main_targets.remove(old_target.addr)
                 del self._targets_by_addr[old_target.addr]
-                self.main_targets.add(target.addr)
+                self.main_targets.add(target.addr, icmp_status)
                 self._targets_by_id[target.id] = target
                 self._targets_by_addr[target.addr] = target
         else:
-            self.main_targets.add(target.addr)
+            self.main_targets.add(target.addr, icmp_status)
             self._targets_by_id[target.id] = target
             self._targets_by_addr[target.addr] = target
 
@@ -91,14 +145,18 @@ class MyComponent(ApplicationSession):
     async def reload_hosts_from_db(self):
         logging.info('loading ips...')
         new_targets = set()
-        sql = 'SELECT ip.ip_id, ip.addr, ip.host_id, ip.network_id FROM host_ip ip'
+        sql = '''
+            SELECT ip.ip_id, ip.addr, ip.host_id, ip.network_id, st.icmp_status
+            FROM host_ip ip
+            JOIN host_ip_icmp_status st ON ip.ip_id = st.ip_id
+        '''
         with (await self.db.cursor()) as cur:
             await cur.execute(sql)
-            for id, addr, host_id, network_id in (await cur.fetchall()):
+            for id, addr, host_id, network_id, icmp_status in (await cur.fetchall()):
                 if addr == '::1' or addr == '127.0.0.1':
                     continue
                 target = HostIpAddrItem(id, addr, host_id, network_id)
-                self._add_target(target)
+                self._add_target(target, icmp_status)
                 new_targets.add(id)
 
         to_delete = set(self._targets_by_id.keys()) - new_targets
@@ -114,13 +172,20 @@ class MyComponent(ApplicationSession):
         return self.main_targets.get_status(host)
 
     def get_events_last(self):
+        status_id2name = {
+            poller.TargetsList.STATUS_UNKNOWN: 'unknown',
+            poller.TargetsList.STATUS_ALIVE: 'alive',
+            poller.TargetsList.STATUS_UNREACHABLE: 'unreachable',
+        }
         result = []
-        for event in self.main_targets.events:
+        for event in self.events:
             event_time, event_source, event_from_state, event_to_state = event
 
             event_time = event_time.timestamp()
             target = self._targets_by_addr[event_source]
             event_extra = (target.host_id, target.network_id)
+            event_from_state = status_id2name[event_from_state]
+            event_to_state = status_id2name[event_to_state]
 
             event = event_time, event_source, event_from_state, event_to_state, event_extra
             result.append(event)

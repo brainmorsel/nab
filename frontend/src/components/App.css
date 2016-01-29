@@ -175,6 +175,50 @@ aside > .content {
 }
 */
 
+.events-list .item {
+  display: flex;
+}
+
+.events-list .item > * {
+  flex: 1;
+}
+
+.events-list .severity {
+  max-width: 10%;
+}
+
+.events-list .time {
+  max-width: 15%;
+}
+
+.events-list .service {
+  max-width: 10%;
+}
+
+.events-list .item:nth-child(2n + 1) {
+  background-color: #DDD;
+}
+
+.events-list .item .severity.critical {
+  background-color: #F77;
+}
+.events-list .item:nth-child(2n + 1) .severity.critical {
+  background-color: #D77;
+}
+
+.events-list .item .severity.ok {
+  background-color: #7F7;
+}
+.events-list .item:nth-child(2n + 1) .severity.ok {
+  background-color: #6D6;
+}
+
+.events-list-controls {
+  display: flex;
+}
+
+
+
 
 .clickable {
   cursor: pointer;
@@ -187,4 +231,8 @@ nav {
 
 nav a {
   margin: 0.5em;
+}
+
+.rdtPicker td {
+  cursor: pointer;
 }

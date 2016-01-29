@@ -32,3 +32,9 @@ INSERT INTO host_ip (ip_id, host_id, network_id, addr, interface_name) VALUES
      (1, 1, 1, '10.9.8.1', NULL)
     ,(2, 2, 1, '10.9.8.2', NULL)
     ,(3, 3, 1, '10.9.8.3', 'eth0')
+    ;
+
+INSERT INTO client_type (client_type_id, name) VALUES
+     (1, 'internal')
+    ,(2, 'customer')
+    ;

@@ -170,6 +170,12 @@ class Handlers:
     SQL_CREATE_HOST_IP = '''
         INSERT INTO host_ip (addr, host_id, interface_name, network_id)
         VALUES (%(addr)s, %(host_id)s, %(interface_name)s, %(network_id)s)
+        RETURNING ip_id
+    '''
+
+    SQL_CREATE_HOST_IP_STATUS = '''
+        INSERT INTO host_ip_icmp_status (ip_id, icmp_status, last_change_time)
+        VALUES (%(ip_id)s, 1, now())
     '''
 
     SQL_UPDATE_HOST_MAC = '''
@@ -604,6 +610,9 @@ class Handlers:
                 'host_id': host_id,
                 'ip_id': ip_id,
             })
+            if ip_id is None:
+                ip_id, = await cur.fetchone()
+                await cur.execute(self.SQL_CREATE_HOST_IP_STATUS, dict(ip_id=ip_id))
             self.wamp.publish('data.host_ip.change')
 
         return 'ok'
@@ -763,3 +772,28 @@ class Handlers:
                 })
 
         return result
+
+    async def events_archive_get(self, start_time=None, end_time=None):
+        sql = '''
+            SELECT event_id, host_id, ip_id, service_type, severity, event_time, data
+            FROM events_archive
+        '''
+
+        if start_time and end_time:
+            sql = sql + ' WHERE event_time >= to_timestamp(%(start_time)s) AND event_time <= to_timestamp(%(end_time)s)'
+
+        result = []
+        with (await self.db.cursor()) as cur:
+            await cur.execute(sql, dict(start_time=int(start_time), end_time=int(end_time)))
+
+            for event_id, host_id, ip_id, service_type, severity, event_time, data in await cur.fetchall():
+                result.append({
+                    'event_id': event_id,
+                    'host_id': host_id,
+                    'ip_id': ip_id,
+                    'service_type': service_type,
+                    'severity': severity,
+                    'event_time': event_time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'data': data,
+                })
+            return result

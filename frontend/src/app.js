@@ -32,10 +32,13 @@ import ItemNetworkEdit from './components/ItemNetworkEdit';
 import ItemNetworkCreate from './components/ItemNetworkCreate';
 import ItemNetworkShowRoot from './components/ItemNetworkShowRoot';
 import EventList from './components/EventList';
+import EventArchive from './components/EventArchive';
 
 import * as reducers from './reducers';
 import * as actions from './actions';
 import urls from './urls';
+
+import 'moment/locale/ru';
 
 const logger = createLogger();
 const finalCreateStore = applyMiddleware(
@@ -63,7 +66,11 @@ render(
   <Provider store={store}>
     <Router history={history}>
       <Route path={urls.prefix} component={App}>
-        <Route path="events" component={EventList}/>
+        <Route path="events">
+          <IndexRoute component={EventList}/>
+          <Route path="archive" component={EventArchive}/>
+          <Route path="archive/host/:host_id" component={EventArchive}/>
+        </Route>
         <Route path="group" component={ItemGroupShowRoot}/>
         <Route path="group/new" component={ItemGroupCreate}/>
         <Route path="group/:group_id" component={ItemGroup}>
