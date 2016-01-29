@@ -15,11 +15,13 @@ setup(
         'aiohttp-jinja2==0.6.2',
         'autobahn==0.10.9',
         'PyYAML==3.11',
-        'ldap3==0.9.9.3'
+        'ldap3==0.9.9.3',
+        'pysnmp==4.3.1'
     ],
     entry_points='''
         [console_scripts]
         nab-webserver=nwaddrbook.scripts.webserver:cli
         nab-icmp-poller=nwaddrbook.scripts.icmp_poller:cli
+        nab-snmp-poller=nwaddrbook.scripts.snmp_poller:cli
     ''',
 )
