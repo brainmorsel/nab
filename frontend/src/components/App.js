@@ -163,12 +163,10 @@ export default class App extends Component {
           </aside>
 
           <article>
-            {errors.messages.length > 0
-              ? <div className='error-messages'>
-                  {errors.messages.map((msg, i) => <div key={i}><b>Error:</b> {msg}</div>)}
-                  <FormButton onClick={this.props.actions.errorsClear}>Clear</FormButton> 
-                </div>
-              : ''}
+              <div className='error-messages' style={{display: errors.messages.length > 0 ? '' : 'none'}}>
+                {errors.messages.map((msg, i) => <div key={i}><b>Error:</b> {msg}</div>)}
+                <FormButton onClick={this.props.actions.errorsClear}>Clear</FormButton> 
+              </div>
             {this.renderChildren() || <div>Home page.</div>}
           </article>
         </main>
