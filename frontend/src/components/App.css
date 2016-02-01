@@ -175,49 +175,98 @@ aside > .content {
 }
 */
 
-.events-list .item {
+.events-archive .item, .events-archive .list-header {
   display: flex;
+  max-height: 25px;
 }
 
-.events-list .item > * {
+.events-archive .item > *, .events-archive .list-header > * {
   flex: 1;
 }
 
-.events-list .severity {
+.events-archive .severity {
+  max-width: 100px;
+}
+
+.events-archive .time {
+  max-width: 200px;
+}
+
+.events-archive .service {
   max-width: 10%;
 }
 
-.events-list .time {
-  max-width: 15%;
+.events-archive .checkbox {
+  max-width: 25px;
+  text-align: center;
 }
 
-.events-list .service {
-  max-width: 10%;
-}
-
-.events-list .item:nth-child(2n + 1) {
+.events-archive .severity option.unknown {
   background-color: #DDD;
 }
-
-.events-list .item .severity.critical {
+.events-archive .severity option.info {
+  background-color: #5BC;
+}
+.events-archive .severity option.warning {
+  background-color: #FC3;
+}
+.events-archive .severity option.critical {
   background-color: #F77;
 }
-.events-list .item:nth-child(2n + 1) .severity.critical {
-  background-color: #D77;
+.events-archive .severity option.ok {
+  background-color: #7E7;
 }
 
-.events-list .item .severity.ok {
-  background-color: #7F7;
-}
-.events-list .item:nth-child(2n + 1) .severity.ok {
-  background-color: #6D6;
+
+.events-list .item.odd {
+  background-color: #EEE;
 }
 
-.events-list-controls {
+.events-list .item:hover {
+  background-color: #DDF;
+}
+
+.events-list .item .severity {
+  text-align: center;
+}
+
+.events-list .item:not(:hover) .severity.critical {
+  background-color: #F77;
+}
+.events-list .item.odd:not(:hover) .severity.critical {
+  background-color: #E77;
+}
+
+.events-list .item:not(:hover) .severity.ok {
+  background-color: #7E7;
+}
+.events-list .item.odd:not(:hover) .severity.ok {
+  background-color: #6E6;
+}
+
+.events-archive .controls {
   display: flex;
+  max-height: 25px;
+  margin-bottom: 5px;
 }
 
+.events-archive .controls > * {
+}
 
+.events-archive {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.events-archive > * {
+  flex: 1;
+}
+
+.events-list {
+  border: 1px solid black;
+  overflow-y: scroll;
+}
 
 
 .clickable {

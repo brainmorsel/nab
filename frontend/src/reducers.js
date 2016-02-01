@@ -231,6 +231,25 @@ export const data = handleActions({
       events_archive: {end_time: action.payload}
     }, state);
   },
+  DATA_EVENTS_ARCHIVE_SELECTION_ADD: (state, action) => {
+    const event_id = action.payload;
+
+    return u({
+      events_archive: {selection: {[event_id]: true}}
+    }, state);
+  },
+  DATA_EVENTS_ARCHIVE_SELECTION_REMOVE: (state, action) => {
+    const event_id = action.payload;
+
+    return u({
+      events_archive: {selection: {[event_id]: false}}
+    }, state);
+  },
+  DATA_EVENTS_ARCHIVE_FILTER_SEVERITY_SET: (state, action) => {
+    return u({
+      events_archive: {filter: {severity: action.payload}}
+    }, state);
+  },
 }, {
   menu: {
     groups: [],
@@ -256,6 +275,10 @@ export const data = handleActions({
     items: [],
     start_time: null,
     end_time: null,
+    selection: {},
+    filter: {
+      severity: 0,
+    }
   },
   search: {
     fetching: false,

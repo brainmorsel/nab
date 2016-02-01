@@ -608,3 +608,6 @@ export const dataSearchFetchingSet = createAction('DATA_SEARCH_FETCHING_SET');
 export const dataEventsArchiveItemsSet = createAction('DATA_EVENTS_ARCHIVE_ITEMS_SET');
 export const dataEventsArchiveStartTimeSet = createAction('DATA_EVENTS_ARCHIVE_START_TIME_SET');
 export const dataEventsArchiveEndTimeSet = createAction('DATA_EVENTS_ARCHIVE_END_TIME_SET');
+export const dataEventsArchiveSelectionAdd = createAction('DATA_EVENTS_ARCHIVE_SELECTION_ADD');
+export const dataEventsArchiveSelectionRemove = createAction('DATA_EVENTS_ARCHIVE_SELECTION_REMOVE');
+export const dataEventsArchiveFilterSeveritySet = createAction('DATA_EVENTS_ARCHIVE_FILTER_SEVERITY_SET');

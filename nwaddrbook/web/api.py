@@ -780,7 +780,9 @@ class Handlers:
         '''
 
         if start_time and end_time:
-            sql = sql + ' WHERE event_time >= to_timestamp(%(start_time)s) AND event_time <= to_timestamp(%(end_time)s)'
+            sql += ' WHERE event_time >= to_timestamp(%(start_time)s) AND event_time <= to_timestamp(%(end_time)s)'
+
+        sql += ' ORDER BY event_time DESC'
 
         result = []
         with (await self.db.cursor()) as cur:
