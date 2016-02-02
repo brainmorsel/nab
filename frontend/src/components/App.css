@@ -11,11 +11,12 @@ html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  color: black;
 }
 
 nav {
   height: 2.9rem;
-  border-bottom: 1px solid black;
+  margin-bottom: 0px !important;
 }
 
 .app-wrap {
@@ -38,7 +39,6 @@ aside {
 
   display: flex;
   flex-direction: column;
-  border-right: 1px solid black;
 }
  
 article {
@@ -49,19 +49,19 @@ article {
   flex-direction: column;
 }
 
-aside > .header {
+aside > .side-header {
   min-height: 25px;
-  font-size: 16pt;
-  border-bottom: 1px solid black;
   display: flex;
 }
 
-aside > .header > input {
+/*
+aside > .side-header > input {
   border: none;
   flex: 1;
 }
+*/
 
-aside > .content {
+aside > .side-content {
   flex: 1;
   overflow-y: scroll;
 }
@@ -69,9 +69,13 @@ aside > .content {
 
 .host-ip-list-item, .host-mac-list-item {
   display: flex;
-
+/*
   border: 1px solid black;
-  margin-bottom: -1px;
+  margin-bottom: -1px;*/
+}
+
+.host-ip-list-item:hover:not(.ip-list-header), .host-mac-list-item:hover:not(.mac-list-header) {
+  background-color: #DDF;
 }
 
 .ip-interface-name, .ip-addr, .ip-network, .ip-buttons, .mac-interface-name, .mac-buttons {
@@ -82,17 +86,8 @@ aside > .content {
   flex: 3;
 }
 
-.host-ip-list-item input, .host-ip-list-item select, .host-mac-list-item input, .host-mac-list-item select {
-  border: none;
-}
-
 .mac-addr {
   flex: 2;
-}
-
-
-.error-messages {
-  border: 1px solid red;
 }
 
 .groups-tree-navigator > ul {
@@ -103,19 +98,19 @@ aside > .content {
 }
 
 
-.event .label, .event.header {
+.event .label, .event.event-header {
   display: flex;
 }
 
-.event.header {
+.event.event-header {
   border-bottom: 1px solid gray;
 }
 
-.event .label > *, .event.header > * {
+.event .label > *, .event.event-header > * {
   flex: 1;
 }
 
-.event .label .hostname, .event.header .hostname {
+.event .label .hostname, .event.event-header .hostname {
   flex: 3;
 }
 
@@ -180,8 +175,13 @@ aside > .content {
 
 .events-archive .item, .events-archive .list-header {
   display: flex;
-  min-height: 25px;
-  max-height: 25px;
+  min-height: 32px;
+  max-height: 32px;
+  align-items: center;
+}
+
+.events-archive .list-header {
+  width: calc(100% - 16px);
 }
 
 .events-archive .item > *, .events-archive .list-header > * {
@@ -200,7 +200,7 @@ aside > .content {
   max-width: 10%;
 }
 
-.events-archive .checkbox {
+.events-archive .selector {
   max-width: 25px;
   text-align: center;
 }
@@ -266,7 +266,6 @@ aside > .content {
 }
 
 .events-list {
-  border: 1px solid black;
   overflow-y: scroll;
   max-height: calc(100vh - 150px);
 }

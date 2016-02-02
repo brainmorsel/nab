@@ -146,13 +146,13 @@ export default class EventArchive extends Component {
     return (
       <div className='events-archive'>
         <div className='controls'>
-          <Datetime dateFormat='YYYY-MM-DD' value={start_time} closeOnSelect onChange={this.handleChangeStartTime.bind(this)}/>
-          <Datetime dateFormat='YYYY-MM-DD' value={end_time} closeOnSelect onChange={this.handleChangeEndTime.bind(this)}/>
+          <Datetime inputProps={{className: 'input'}} dateFormat='YYYY-MM-DD' value={start_time} closeOnSelect onChange={this.handleChangeStartTime.bind(this)}/>
+          <Datetime inputProps={{className: 'input'}} dateFormat='YYYY-MM-DD' value={end_time} closeOnSelect onChange={this.handleChangeEndTime.bind(this)}/>
           <FormButton onClick={this.handleReaload.bind(this)}>Show</FormButton>
           <div>Events: {events.length} Selected: {selected.length}</div>
         </div>
         <div className='list-header'>
-          <div className='checkbox'></div>
+          <div className='selector'></div>
           <div className='hostname'>
             hostname
           </div>
@@ -162,7 +162,7 @@ export default class EventArchive extends Component {
           <div className='time'>
             time
           </div>
-          <div className='severity'>
+          <div className='severity select'>
             <select size='1' value={filters.severity} onChange={this.handleChangeFilterSeverity.bind(this)}>
               {Object.keys(severity_levels).map(lvl => <option key={lvl} value={lvl} className={severity_levels[lvl]}>{severity_levels[lvl]}</option>)}
             </select>
@@ -264,8 +264,8 @@ class EventItem extends Component {
     if (host) {
       return (
         <div className={classNames('item', (idx % 2 == 0 ? 'even' : 'odd'))} style={{height: rowHeight, overflow: 'hidden'}}>
-          <div className='checkbox'>
-            <input type='checkbox' checked={ev._selected} onChange={() => onCheckboxClick(ev)} />
+          <div className='selector'>
+            <input className='checkbox' type='checkbox' checked={ev._selected} onChange={() => onCheckboxClick(ev)} />
           </div>
           <div className='hostname'>
             <GroupBreadcrumbs group_id={host.group_id} simple>

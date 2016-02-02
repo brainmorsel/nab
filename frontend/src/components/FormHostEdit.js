@@ -36,27 +36,29 @@ export default class HostEditForm extends Component {
       <Form className={className} onSubmit={handleSubmit(onSave)}>
         <FormField field={host_type_id}>
           <label>type:</label>
-          <select size='1' {...host_type_id}>
-            {Object.keys(hostTypes).map(type_id => <option key={type_id} value={type_id}>{hostTypes[type_id].name}</option>)}
-          </select>
+          <span className='select'>
+            <select size='1' {...host_type_id}>
+              {Object.keys(hostTypes).map(type_id => <option key={type_id} value={type_id}>{hostTypes[type_id].name}</option>)}
+            </select>
+          </span>
         </FormField>
         <FormField field={name}>
           <label>hostname:</label>
-          <input type='text' placeholder='hostname' {...name}/>
+          <input className='input' type='text' placeholder='hostname' {...name}/>
         </FormField>
         <FormField field={snmp_community_public}>
           <label>SNMP Community Public:</label>
-          <input type='text' placeholder='public' {...snmp_community_public}/>
+          <input className='input' type='text' placeholder='public' {...snmp_community_public}/>
         </FormField>
         <FormField field={snmp_community_private}>
           <label>SNMP Community Private:</label>
-          <input type='text' placeholder='private' {...snmp_community_private}/>
+          <input className='input' type='text' placeholder='private' {...snmp_community_private}/>
         </FormField>
         <FormField field={data}>
           <label>JSON Data:</label>
-          <textarea {...data}/>
+          <textarea className='textarea' {...data}/>
         </FormField>
-        <FormButton onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
+        <FormButton className='is-primary' onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
       </Form>
     );
   }

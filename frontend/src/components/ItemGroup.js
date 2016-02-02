@@ -80,15 +80,12 @@ export default class ItemGroup extends Component {
             <GroupBreadcrumbs group_id={item.parent_id}>
               <GroupLabel group={item}/>
             </GroupBreadcrumbs>
-            <hr />
             <div>
-              [
-              <Link to={urls.group.show(item.group_id)}>Show</Link>|
-              <Link to={urls.group.edit(item.group_id)}>Edit</Link>|
-              <Link to={urls.group.move(item.group_id)}>Move</Link>|
-              <Link to={urls.group.create(item.group_id)}>Create group</Link>|
-              <Link to={urls.host.create(item.group_id)}>Create host</Link>
-              ]
+              <Link className='button' to={urls.group.show(item.group_id)}>Show</Link>
+              <Link className='button' to={urls.group.edit(item.group_id)}>Edit</Link>
+              <Link className='button' to={urls.group.move(item.group_id)}>Move</Link>
+              <Link className='button' to={urls.group.create(item.group_id)}>Create group</Link>
+              <Link className='button' to={urls.host.create(item.group_id)}>Create host</Link>
               <FormButtonConfirm onClick={this.handleDelete.bind(this)}>Delete</FormButtonConfirm>
             </div>
             {this.renderChildren(item)}

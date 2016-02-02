@@ -39,13 +39,10 @@ export default class ItemNetwork extends Component {
       item
         ? <div>
             <b>{item.name}</b>
-            <hr/>
             <div>
-              [
-              <Link to={urls.network.show(item.network_id)}>Show</Link>|
-              <Link to={urls.network.edit(item.network_id)}>Edit</Link>|
-              <Link to={urls.network.create(item.network_id)}>Create network</Link>
-              ]
+              <Link className='button' to={urls.network.show(item.network_id)}>Show</Link>
+              <Link className='button' to={urls.network.edit(item.network_id)}>Edit</Link>
+              <Link className='button' to={urls.network.create(item.network_id)}>Create network</Link>
               <FormButtonConfirm onClick={this.handleDelete.bind(this)}>Delete</FormButtonConfirm>
             </div>
             {this.renderChildren(item)}

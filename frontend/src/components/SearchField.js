@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import * as actions from '../actions';
 import { bindActionCreators } from 'redux';
 import { createSelector } from 'reselect';
+import classNames from 'classnames';
 
 import urls from '../urls';
 import { Link } from 'react-router';
@@ -43,13 +44,20 @@ export default class SearchField extends Component {
   }
 
   render() {
-    const { query, fetching } = this.props;
+    const { query, fetching, className } = this.props;
+    const showClearBtn = query.length > 0;
 
     return (
-      <div {...this.props}>
-        {fetching ? <Icon name='spinner' spin fixedWidth /> : <Icon name='search' fixedWidth />}
-        <input type='text' placeholder='search...' value={query} onChange={this.handleQueryChange.bind(this)}/>
-        {query.length > 0 ? <Icon className='clickable' name='times' fixedWidth onClick={this.handleQueryClear.bind(this)} /> : ''}
+      <div {...this.props} className={classNames(className, 'control is-withicon', {'is-grouped': showClearBtn})}>
+        <input className='input' type='text' placeholder='search...' value={query} onChange={this.handleQueryChange.bind(this)}/>
+        <Icon name='search'/>
+        <button
+          style={{display: showClearBtn ? '' : 'none'}}
+          className='button'
+          onClick={this.handleQueryClear.bind(this)}
+          >
+            <Icon name='times' fixedWidth/>
+          </button>
       </div>
     );
   }

@@ -54,7 +54,7 @@ export default class HostMACList extends Component {
     return (
       <div>
         <h4>MAC Addresses:</h4>
-        <div className='host-mac-list-item header'>
+        <div className='host-mac-list-item mac-list-header'>
           <span className='mac-interface-name'>Interface</span>
           <span className='mac-addr'>Addr</span>
           <span className='mac-buttons'>Actions</span>

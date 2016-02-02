@@ -29,6 +29,7 @@
   "dependencies": {
     "axios": "^0.7.0",
     "babel-runtime": "^5.8.25",
+    "bulma": "0.0.10",
     "classnames": "^2.2.1",
     "elemental": "^0.5.10",
     "font-awesome": "^4.5.0",

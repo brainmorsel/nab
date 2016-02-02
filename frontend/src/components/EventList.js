@@ -212,7 +212,7 @@ export default class EventList extends Component {
 
     return (
       <div>
-        <div className='event header'>
+        <div className='event event-header'>
           <div className='subevents-toggle'>
             { isFetching
               ? <Icon name='spinner' spin fixedWidth />

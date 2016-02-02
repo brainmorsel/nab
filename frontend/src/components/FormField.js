@@ -6,7 +6,7 @@ export default class FormField extends Component {
     const { className, children } = this.props;
     const field = this.props.field || {};
     return (
-      <div className={classNames(className, 'field', {'error': field.touched && field.error})}>
+      <div className={classNames(className, 'control', {'error': field.touched && field.error})}>
         {children}
         {field.touched && field.error && <div>{field.error}</div>}
       </div>

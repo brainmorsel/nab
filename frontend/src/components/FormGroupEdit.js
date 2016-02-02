@@ -29,15 +29,17 @@ export default class FormGroupEdit extends Component {
         <Form className={className} onSubmit={handleSubmit(onSave)}>
           <FormField field={name}>
             <label>Name:</label>
-            <input type='text' placeholder='name' {...name}/>
+            <input className='input' type='text' placeholder='name' {...name}/>
           </FormField>
           <FormField field={group_type_id}>
             <label>Group Type:</label>
-            <select {...group_type_id} size='1'>
-              {Object.keys(groupTypes).map(id => <option key={id} value={id}>{groupTypes[id].name}</option>)}
-            </select>
+            <div className='select'>
+              <select {...group_type_id} size='1'>
+                {Object.keys(groupTypes).map(id => <option key={id} value={id}>{groupTypes[id].name}</option>)}
+              </select>
+            </div>
           </FormField>
-          <FormButton onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
+          <FormButton className='is-primary' onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
         </Form>
     );
   }

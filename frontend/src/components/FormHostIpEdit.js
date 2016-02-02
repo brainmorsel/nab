@@ -24,11 +24,13 @@ export default class FormHostIpEdit extends Component {
 
     return (
         <Form className={className} onSubmit={handleSubmit(onSave)}>
-          <input className='ip-interface-name' type='text' placeholder='name' {...interface_name}/>
-          <input className='ip-addr' type='text' placeholder='0.0.0.0' {...addr}/>
-          <select className='ip-network' size='1' {...network_id}>
-            {networks.map(nw => <option key={nw.network_id} value={nw.network_id}>{nw.name} ({nw.addr})</option>)}
-          </select>
+          <input className='input ip-interface-name' type='text' placeholder='name' {...interface_name}/>
+          <input className='input ip-addr' type='text' placeholder='0.0.0.0' {...addr}/>
+          <span className='select ip-network'>
+            <select className='input' size='1' {...network_id}>
+              {networks.map(nw => <option key={nw.network_id} value={nw.network_id}>{nw.name} ({nw.addr})</option>)}
+            </select>
+          </span>
           <span className='ip-buttons'>
             <FormButton onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
             { onCancel ? <FormButton onClick={onCancel}>Cancel</FormButton> : ''}

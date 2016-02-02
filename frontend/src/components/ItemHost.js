@@ -88,11 +88,9 @@ export default class ItemHost extends Component {
             </GroupBreadcrumbs>
             <hr />
             <div>
-              [
-              <Link to={urls.host.show(item.host_id)}>Show</Link>|
-              <Link to={urls.host.edit(item.host_id)}>Edit</Link>|
-              <Link to={urls.host.move(item.host_id)}>Move</Link>
-              ]
+              <Link className='button' to={urls.host.show(item.host_id)}>Show</Link>
+              <Link className='button' to={urls.host.edit(item.host_id)}>Edit</Link>
+              <Link className='button' to={urls.host.move(item.host_id)}>Move</Link>
               <FormButtonConfirm onClick={this.handleDelete.bind(this)}>Delete</FormButtonConfirm>
             </div>
 

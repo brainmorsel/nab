@@ -24,8 +24,8 @@ export default class FormHostMacEdit extends Component {
 
     return (
         <Form className={className} onSubmit={handleSubmit(onSave)}>
-          <input className='mac-interface-name' type='text' placeholder='name' {...interface_name}/>
-          <input className='mac-addr' type='text' placeholder='00:00:00:00:00:00' {...addr}/>
+          <input className='input mac-interface-name' type='text' placeholder='name' {...interface_name}/>
+          <input className='input mac-addr' type='text' placeholder='00:00:00:00:00:00' {...addr}/>
           <span className='mac-buttons'>
             <FormButton onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
             { onCancel ? <FormButton onClick={onCancel}>Cancel</FormButton> : ''}

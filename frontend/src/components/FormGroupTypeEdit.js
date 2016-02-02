@@ -35,13 +35,13 @@ export default class FormGroupTypeEdit extends Component {
         <Form className={className} onSubmit={handleSubmit(onSave)}>
           <FormField field={name}>
             <label>Name:</label>
-            <input type='text' placeholder='name' {...name}/>
+            <input className='input' type='text' placeholder='name' {...name}/>
           </FormField>
           <FormField field={icon_name}>
             <label>Icon Name:</label>
-            <input type='text' placeholder='icon name' {...icon_name}/>
+            <input className='input' type='text' placeholder='icon name' {...icon_name}/>
           </FormField>
-          <FormButton onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
+          <FormButton className='is-primary' onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
         </Form>
     );
   }

@@ -1,3 +1,5 @@
+import 'bulma/css/bulma.css';
+
 import './App.css';
 import React, { Component } from 'react';
 import { Link } from 'react-router';
@@ -122,18 +124,20 @@ export default class App extends Component {
 
     return (
       <div className='app-root'>
-        <nav>
-          <Link to={urls.home()}>Home</Link>
-          <Link to={urls.events.show()}>Events</Link>
-          <Link to={urls.events.archive()}>Events Archive</Link>
+        <nav className="navbar">
+          <div className="navbar-left">
+            <Link to={urls.home()}>Home</Link>
+            <Link to={urls.events.show()}>Events</Link>
+            <Link to={urls.events.archive()}>Events Archive</Link>
+          </div>
         </nav>
 
         <div className='app-wrap'>
         <main>
           <aside>
-            <SearchField className='header'/>
+            <SearchField className='side-header'/>
 
-            <div className='content'>
+            <div className='side-content'>
               <SearchResults style={{display: data.search.query.length > 0 ? '' : 'none'}} className='treemenu' />
               <ul style={{display: data.search.query.length > 0 ? 'none' : ''}} className='treemenu'>
                 <MenuItemGroup
@@ -164,8 +168,12 @@ export default class App extends Component {
 
           <article>
               <div className='error-messages' style={{display: errors.messages.length > 0 ? '' : 'none'}}>
-                {errors.messages.map((msg, i) => <div key={i}><b>Error:</b> {msg}</div>)}
-                <FormButton onClick={this.props.actions.errorsClear}>Clear</FormButton> 
+                {errors.messages.map((msg, i) =>
+                    <div className='notification is-danger' key={i}>
+                      <button className='delete' onClick={this.props.actions.errorsClear}></button>
+                      <b>Error</b>:
+                      {msg}
+                    </div>)}
               </div>
             {this.renderChildren() || <div>Home page.</div>}
           </article>

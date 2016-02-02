@@ -108,7 +108,7 @@ export default class HostIPList extends Component {
     return (
       <div>
         <h4>IP Addresses:</h4>
-        <div className='host-ip-list-item header'>
+        <div className='host-ip-list-item ip-list-header'>
           <span className='ip-interface-name'>Interface</span>
           <span className='ip-addr'>Addr</span>
           <span className='ip-network'>Network</span>

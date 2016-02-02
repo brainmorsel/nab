@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import FormButton from './FormButton.js';
 import FormHostIpEdit from './FormHostIpEdit.js';
+import Icon from './Icon.js';
 
 import { Link } from 'react-router';
 import urls from '../urls';
@@ -44,6 +45,9 @@ export default class HostIPListItem extends Component {
         <span className='ip-addr'>{ip.addr}</span>
         <Link className='ip-network' to={urls.network.show(network.network_id)}>{network.name} ({network.addr})</Link>
         <span className='ip-buttons'>
+          <a className='button' href={'telnet://'+ip.addr} title='connect by telnet'>
+            <Icon name='tty' fixedWidth />
+          </a>
           <FormButton onClick={this.goToEditMode.bind(this)}>Edit</FormButton>
           <FormButton onClick={this.goToDeleteMode.bind(this)}>Delete</FormButton>
         </span>

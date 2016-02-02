@@ -28,25 +28,25 @@ export default class FormNetworkEdit extends Component {
         <Form className={className} onSubmit={handleSubmit(onSave)}>
           <FormField field={name}>
             <label>Name:</label>
-            <input type='text' placeholder='name' {...name}/>
+            <input className='input' type='text' placeholder='name' {...name}/>
           </FormField>
           <FormField field={addr}>
             <label>Address:</label>
-            <input type='text' placeholder='0.0.0.0/0' {...addr}/>
+            <input  className='input' type='text' placeholder='0.0.0.0/0' {...addr}/>
           </FormField>
           <FormField field={vlan_id}>
             <label>VLAN ID:</label>
-            <input type='text' placeholder='1-4095' {...vlan_id}/>
+            <input className='input' type='text' placeholder='1-4095' {...vlan_id}/>
           </FormField>
           <FormField field={vlan_qinq_id}>
             <label>VLAN QinQ ID:</label>
-            <input type='text' placeholder='1-4095' {...vlan_qinq_id}/>
+            <input className='input' type='text' placeholder='1-4095' {...vlan_qinq_id}/>
           </FormField>
           <FormField field={mpls_id}>
             <label>MPLS ID:</label>
-            <input type='text' placeholder='' {...mpls_id}/>
+            <input className='input' type='text' placeholder='' {...mpls_id}/>
           </FormField>
-          <FormButton onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
+          <FormButton className='is-primary' onClick={handleSubmit(onSave)}>{btnLabel}</FormButton>
         </Form>
     );
   }

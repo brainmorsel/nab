@@ -5,7 +5,7 @@ export default class FormButton extends Component {
   render() {
     const { className } = this.props;
     return (
-      <button {...this.props}/>
+      <button {...this.props} className={classNames('button', className)}/>
     );
   }
 }
