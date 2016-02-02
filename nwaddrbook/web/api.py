@@ -754,7 +754,7 @@ class Handlers:
                         'network_id': network_id,
                         'addr': addr,
                     })
-            sql = 'SELECT host_id, name FROM host WHERE name LIKE %(q)s ORDER BY name'
+            sql = 'SELECT host_id, name FROM host WHERE name ILIKE %(q)s ORDER BY name'
             await cur.execute(sql, {'q': _q})
             for host_id, name in await cur.fetchall():
                 result.append({
@@ -762,7 +762,7 @@ class Handlers:
                     'host_id': host_id,
                     'name': name,
                 })
-            sql = 'SELECT group_id, name FROM "group" WHERE name LIKE %(q)s ORDER BY name'
+            sql = 'SELECT group_id, name FROM "group" WHERE name ILIKE %(q)s ORDER BY name'
             await cur.execute(sql, {'q': _q})
             for group_id, name in await cur.fetchall():
                 result.append({
