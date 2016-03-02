@@ -36,6 +36,11 @@ class Task:
             self.future.set_result({'success': False, 'error': 'timeout'})
             self.future = None
 
+    def handle_exception(self, e):
+        if self.future:
+            self.future.set_exception(e)
+            self.future = None
+
     def raw_msg(self):
         if self._rawMsg is None:
             pMod = self.pMod
@@ -152,7 +157,10 @@ class Poller:
     def handle_write(self):
         if len(self._req_queue) > 0:
             task = self._req_queue.pop(0)
-            self.send_task(task)
+            try:
+                self.send_task(task)
+            except Exception as e:
+                task.handle_exception(e)
         self._check_queue()
 
     def _check_queue(self):
@@ -167,7 +175,7 @@ class Poller:
         return self._request('GET', host, port, community, var_binds)
 
     def request_set(self, host, port, community, var_binds):
-        return self._request('GET', host, port, community, var_binds)
+        return self._request('SET', host, port, community, var_binds)
 
     def _request(self, type, host, port, community, var_binds):
         task = Task(self.p2, type, host, port, community, var_binds)

@@ -7,7 +7,7 @@ After=network.target
 Type=simple
 User=root
 Group=root
-ExecStart=/opt/nab/venv/bin/nab-icmp-poller --config /opt/nab/config/config-icmp-poller.yaml
+ExecStart=/opt/nab/venv/bin/nab-icmp-poller --config /opt/nab/etc/config-icmp-poller.yaml
 
 # Give a reasonable amount of time for the server to start up/shut down
 TimeoutSec=30

@@ -32,7 +32,7 @@ class MyComponent(ApplicationSession):
         self.db = None
 
         self.poller = poller.Poller(loop=loop)
-        self.main_targets = poller.TargetsList(period=60.0, store_metrics=10)
+        self.main_targets = poller.TargetsList(period=60.0, store_metrics=10, unreachable_threshold=10)
         self.main_targets.on_status_change(self.handle_status_change)
         self.poller.add_target_list(self.main_targets)
 

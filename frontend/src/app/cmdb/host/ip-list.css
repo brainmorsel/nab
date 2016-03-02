@@ -1,0 +1,14 @@
+.form {
+    display: flex;
+    align-content: justify;
+}
+
+.form > * {
+    flex: 1;
+}
+
+.form :global .buttons {
+    flex: none;
+    display: flex;
+    align-content: justify;
+}

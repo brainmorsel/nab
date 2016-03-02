@@ -14,7 +14,7 @@ module.exports = {
   cache: true,
   entry: {
     fa: 'font-awesome/css/font-awesome.css',
-    app: path.join(srcPath, 'app.js'),
+    index: path.join(srcPath, 'index.js'),
   },
   resolve: {
     root: srcPath,
@@ -39,8 +39,16 @@ module.exports = {
         loader: 'json'
       },
       { test: /\.less$/, loader: "style!css!less" },
-      { test: /\.css$/, loader: 'style-loader!css-loader!postcss-loader' },
-      //{ test: /\.css$/, exclude: /node_modules/, loader: ExtractTextPlugin.extract('style', 'css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]', 'postcss') },
+      {
+        test: /\.css$/,
+        exclude: /src/,
+        loader: 'style-loader!css-loader!postcss-loader'
+      },
+      {
+        test: /\.css$/,
+        exclude: /node_modules/,
+        loader: 'style!css-loader?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss-loader'
+      },
       { test: /\.(ttf|eot|svg|woff(2)?)(\?[a-z0-9=.]+)?$/, loader: 'file-loader' },
     ]
   },

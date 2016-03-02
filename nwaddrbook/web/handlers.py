@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from aiohttp import web
 from aiohttp_session import get_session
@@ -50,5 +51,10 @@ async def ajaxapi(request):
         data = await request.json()
         result = await request.app.api.request('user-id-1', data)
         logging.getLogger(__name__).debug('REQ {0}'.format(json.dumps(data)))
-        # print('RES', json.dumps(result))
-        return web.Response(text=json.dumps(result), content_type='application/json')
+    try:
+        res_text = json.dumps(result)
+    except Exception:
+        logging.getLogger(__name__).error(traceback.format_exc())
+        res_text = json.dumps({'success': False, 'error': 'Response is not JSON serializable.'})
+
+    return web.Response(text=res_text, content_type='application/json')

@@ -14,7 +14,7 @@ class TargetsList:
     STATUS_ALIVE = 2
     STATUS_UNREACHABLE = 3
 
-    def __init__(self, period=3.0, store_metrics=5):
+    def __init__(self, period=3.0, store_metrics=5, unreachable_threshold=3):
         self._targets = []
         self._iterators = []
         self._next_idx = 0
@@ -25,6 +25,7 @@ class TargetsList:
         self._next_req_time = 0
 
         self._store_metrics = store_metrics
+        self._unreachable_threshold = unreachable_threshold
         self._metrics = {}
         self._statuses = {}
 
@@ -67,7 +68,7 @@ class TargetsList:
 
         status, count = self.metrics_to_status(target)
 
-        if count < min(3, self._store_metrics):
+        if count < min(self._unreachable_threshold, self._store_metrics):
             self.put_request(target)
         else:
             self.handle_status_change(target, status)

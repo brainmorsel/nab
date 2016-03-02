@@ -1,6 +1,9 @@
 from datetime import datetime
 import re
+import traceback
+import logging
 
+import psycopg2
 from psycopg2.extras import Json
 
 
@@ -30,7 +33,12 @@ class Provider:
             handler = getattr(handlers, action)
 
             return Success(await handler(**params))
+        except psycopg2.OperationalError as error:
+            logging.error(traceback.format_exc())
+            await self._db.clear()
+            return Fail(error)
         except Exception as error:
+            logging.error(traceback.format_exc())
             return Fail(error)
 
 
@@ -56,7 +64,7 @@ class Handlers:
     '''
 
     SQL_GET_HOST = '''
-        SELECT h.host_id, h.group_id, h.name, h.host_type_id, h.snmp_community_public, h.snmp_community_private, h.data
+        SELECT h.host_id, h.group_id, h.name, h.host_type_id, h.snmp_community_public, h.snmp_community_private, h.data, h.description
         FROM host h
     '''
 
@@ -121,7 +129,8 @@ class Handlers:
             host_type_id=%(host_type_id)s,
             snmp_community_public=%(snmp_community_public)s,
             snmp_community_private=%(snmp_community_private)s,
-            data=%(data)s
+            data=%(data)s,
+            description=%(description)s
         WHERE host_id = %(host_id)s
     '''
 
@@ -132,8 +141,8 @@ class Handlers:
     '''
 
     SQL_CREATE_HOST = '''
-        INSERT INTO host (group_id, host_type_id, name, snmp_community_public, snmp_community_private, data)
-        VALUES (%(group_id)s, %(host_type_id)s, %(name)s, %(snmp_community_public)s, %(snmp_community_private)s, %(data)s)
+        INSERT INTO host (group_id, host_type_id, name, snmp_community_public, snmp_community_private, data, description)
+        VALUES (%(group_id)s, %(host_type_id)s, %(name)s, %(snmp_community_public)s, %(snmp_community_private)s, %(data)s, %(description)s)
     '''
 
     SQL_UPDATE_GROUP_TYPE = '''
@@ -245,7 +254,7 @@ class Handlers:
             if group_id is not None:
                 sql = self.SQL_GET_HOST + ' WHERE h.group_id = %(parent_id)s ORDER BY h.name'
                 await cur.execute(sql, dict(parent_id=group_id))
-                for id, group_id, name, type_id, snmp_public, snmp_private, data in await cur.fetchall():
+                for id, group_id, name, type_id, snmp_public, snmp_private, data, description in await cur.fetchall():
                     children.append({
                         'type': 'host',
                         'host_id': id,
@@ -259,6 +268,7 @@ class Handlers:
                         'snmp_community_public': snmp_public,
                         'snmp_community_private': snmp_private,
                         'data': data,
+                        'description': description,
                     })
 
         return {
@@ -328,7 +338,7 @@ class Handlers:
         sideload = []
 
         with (await self.db.cursor()) as cur:
-            sql = self.SQL_GET_HOST_IP + ' WHERE ip.host_id = %(id)s'
+            sql = self.SQL_GET_HOST_IP + ' WHERE ip.host_id = %(id)s ORDER BY ip.addr'
 
             await cur.execute(sql, dict(id=host_id))
             for id, _, interface_name, network_id, addr in await cur.fetchall():
@@ -386,21 +396,6 @@ class Handlers:
                 'mpls_id': mpls_id,
             }}
 
-    async def group_get(self, group_id):
-        with (await self.db.cursor()) as cur:
-            sql = self.SQL_GET_GROUP + ' WHERE g.group_id = %(id)s'
-            await cur.execute(sql, dict(id=group_id))
-            id, parent_id, name, type_id, type_name, icon_name = await cur.fetchone()
-            return {'group': {
-                'type': 'group',
-                'group_id': id,
-                'parent_id': parent_id,
-                'name': name,
-                'group_type_id': type_id,
-                'group_type_name': type_name,
-                'icon_name': icon_name
-            }}
-
     async def group_type_get_all(self):
         items = []
         with (await self.db.cursor()) as cur:
@@ -430,7 +425,76 @@ class Handlers:
                 })
         return {'items': items}
 
-    async def group_save(self, name, group_type_id, group_id=None, parent_id=None):
+    async def client_type_get_all(self):
+        sql = '''
+            SELECT ct.client_type_id, ct.name, ct.description
+            FROM client_type ct
+        '''
+        items = []
+        with (await self.db.cursor()) as cur:
+            await cur.execute(sql)
+
+            for id, name, description in await cur.fetchall():
+                items.append({
+                    'type': 'client_type',
+                    'client_type_id': id,
+                    'name': name,
+                    'description': description,
+                })
+        return {'items': items}
+
+    async def host_get_clients(self, host_id):
+        sql = '''
+            SELECT
+                c.client_id, c.name, c.description, po.port_id, ct.client_type_id,
+                ct.name as client_type_name, po.client_mac, po.update_time,
+                cs.time_start, cs.time_end, cs.nas_ip, cs.client_ip,
+                s.profile_id, s.active, s.update_time
+            FROM client_port_owner po
+            JOIN client c ON c.client_id = po.client_id
+            JOIN client_type ct ON c.client_type_id = ct.client_type_id
+            JOIN client_current_session cs ON cs.client_id = c.client_id
+            LEFT JOIN client_igmp_profile_status s ON s.client_id = c.client_id
+            WHERE po.host_id = %(host_id)s
+            ORDER BY po.port_id
+        '''
+        clients = []
+
+        with (await self.db.cursor()) as cur:
+            await cur.execute(sql, dict(host_id=host_id))
+            for client_id, name, description, port_id, client_type_id, client_type_name, \
+                    client_mac, update_time, cs_time_start, cs_time_end, nas_ip, client_ip, \
+                    igmp_profile_id, igmp_profile_active, igmp_profile_update_time in await cur.fetchall():
+                clients.append({
+                    'client_id': client_id,
+                    'name': name,
+                    'description': description,
+                    'port_id': port_id,
+                    'client_type_id': client_type_id,
+                    'client_type_name': client_type_name,
+                    'client_mac': client_mac,
+                    'update_time_ts': update_time and update_time.timestamp(),
+                    'update_time': update_time and update_time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'session': {
+                        'time_start_ts': cs_time_start and cs_time_start.timestamp(),
+                        'time_start': cs_time_start and cs_time_start.strftime('%Y-%m-%d %H:%M:%S'),
+                        'time_end_ts': cs_time_end and cs_time_end.timestamp(),
+                        'time_end': cs_time_end and cs_time_end.strftime('%Y-%m-%d %H:%M:%S'),
+                        'nas_ip': nas_ip,
+                        'client_ip': client_ip
+                    },
+                    'igmp': {
+                        'profile_id': igmp_profile_id,
+                        'active': igmp_profile_active,
+                        'update_time': igmp_profile_update_time and igmp_profile_update_time.strftime('%Y-%m-%d %H:%M:%S'),
+                    },
+                })
+
+        return {
+            'clients': clients
+        }
+
+    async def group_save(self, name, group_type_id, group_id=None, parent_id=None, **kwargs):
         # group_id == None - создать новую группу
         if group_id is None:
             sql = self.SQL_CREATE_GROUP
@@ -446,22 +510,6 @@ class Handlers:
             })
         return 'ok'
 
-    async def host_get(self, host_id):
-        with (await self.db.cursor()) as cur:
-            sql = self.SQL_GET_HOST + ' WHERE h.host_id = %(id)s'
-            await cur.execute(sql, dict(id=host_id))
-            id, group_id, name, host_type_id, snmp_community_public, snmp_community_private, data = await cur.fetchone()
-            return {'host': {
-                'type': 'host',
-                'host_id': id,
-                'group_id': group_id,
-                'name': name,
-                'host_type_id': host_type_id,
-                'snmp_community_public': snmp_community_public,
-                'snmp_community_private': snmp_community_private,
-                'data': data,
-            }}
-
     async def host_get_batch(self, ids):
         with (await self.db.cursor()) as cur:
             sql = self.SQL_GET_HOST + ' WHERE h.host_id in %(ids)s'
@@ -469,7 +517,7 @@ class Handlers:
             group_ids = set()
 
             await cur.execute(sql, dict(ids=tuple(ids)))
-            for id, group_id, name, host_type_id, snmp_community_public, snmp_community_private, data in await cur.fetchall():
+            for id, group_id, name, host_type_id, snmp_community_public, snmp_community_private, data, description in await cur.fetchall():
                 group_ids.add(group_id)
                 hosts.append({
                     'type': 'host',
@@ -480,6 +528,7 @@ class Handlers:
                     'snmp_community_public': snmp_community_public,
                     'snmp_community_private': snmp_community_private,
                     'data': data,
+                    'description': description,
                 })
 
             groups = []
@@ -522,7 +571,7 @@ class Handlers:
                 'groups': groups,
             }
 
-    async def host_save(self, name, host_type_id, snmp_community_public, snmp_community_private, data, host_id=None, group_id=None):
+    async def host_save(self, name, host_type_id, snmp_community_public, snmp_community_private, data, description, host_id=None, group_id=None, **kwargs):
         # host_id == None - создать новую
         if host_id is None:
             sql = self.SQL_CREATE_HOST
@@ -538,6 +587,7 @@ class Handlers:
                 'snmp_community_private': snmp_community_private,
                 'data': Json(data),
                 'group_id': group_id,
+                'description': description,
             })
         return 'ok'
 
@@ -593,7 +643,7 @@ class Handlers:
             })
         return 'ok'
 
-    async def host_ip_save(self, addr, network_id, host_id, interface_name=None, ip_id=None):
+    async def host_ip_save(self, addr, network_id, host_id, interface_name=None, ip_id=None, **kwargs):
         if ip_id is None:
             sql = self.SQL_CREATE_HOST_IP
         else:
@@ -617,7 +667,7 @@ class Handlers:
 
         return 'ok'
 
-    async def host_mac_save(self, addr, host_id, interface_name=None, mac_id=None):
+    async def host_mac_save(self, addr, host_id, interface_name=None, mac_id=None, **kwargs):
         if mac_id is None:
             sql = self.SQL_CREATE_HOST_MAC
         else:
@@ -681,7 +731,7 @@ class Handlers:
             })
         return 'ok'
 
-    async def group_move(self, group_id, parent_id):
+    async def group_move(self, group_id, parent_id, **kwargs):
         sql = self.SQL_MOVE_GROUP
 
         with (await self.db.cursor()) as cur:
@@ -691,7 +741,7 @@ class Handlers:
             })
         return 'ok'
 
-    async def host_move(self, host_id, group_id):
+    async def host_move(self, host_id, group_id, **kwargs):
         sql = self.SQL_MOVE_HOST
 
         with (await self.db.cursor()) as cur:
@@ -770,8 +820,15 @@ class Handlers:
                     'group_id': group_id,
                     'name': name,
                 })
+        limit = 100
+        end_marker = []
+        if len(result) > limit:
+            end_marker.append({
+                'type': '_end_marker',
+                'remaining_count': len(result) - limit
+            })
 
-        return result
+        return result[:limit] + end_marker
 
     async def events_archive_get(self, start_time=None, end_time=None):
         sql = '''
@@ -798,4 +855,46 @@ class Handlers:
                     'event_time': event_time.strftime('%Y-%m-%d %H:%M:%S'),
                     'data': data,
                 })
-            return result
+        return result
+
+    async def events_problem_hosts_get(self):
+        sql = '''
+            SELECT ip.host_id,
+                case icmp_status
+                    when 1 then 'unknown'
+                    when 2 then 'alive'
+                    when 3 then 'unreachable'
+                end as status,
+                ip.ip_id,
+                ip.interface_name,
+                ip.network_id,
+                ip.addr,
+                last_change_time,
+                cc.clients_count
+            FROM host_ip_icmp_status ip_s
+            JOIN host_ip ip ON ip.ip_id = ip_s.ip_id
+            LEFT JOIN (
+                SELECT host_id, COUNT(client_id) as clients_count
+                FROM client_port_owner
+                GROUP BY host_id
+            ) cc ON cc.host_id = ip.host_id
+            WHERE ip_s.icmp_status != 2
+            ORDER BY last_change_time DESC
+        '''
+        result = []
+        with (await self.db.cursor()) as cur:
+            await cur.execute(sql)
+
+            for host_id, status, ip_id, interface_name, network_id, addr, last_change_time, clients_count in await cur.fetchall():
+                result.append({
+                    'host_id': host_id,
+                    'status': status,
+                    'ip_id': ip_id,
+                    'interface_name': interface_name,
+                    'network_id': network_id,
+                    'addr': addr,
+                    'last_change_time': last_change_time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'last_change_time_ts': last_change_time.timestamp(),
+                    'clients_count': clients_count,
+                })
+        return result

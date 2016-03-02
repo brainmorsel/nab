@@ -103,15 +103,32 @@ CREATE TABLE IF NOT EXISTS client (
     );
 
 CREATE TABLE IF NOT EXISTS client_current_session (
-     client_id integer PRIMARY KEY REFERENCES client
+     client_id integer PRIMARY KEY REFERENCES client ON DELETE CASCADE
     ,time_start timestamp with time zone DEFAULT now()
     ,time_end timestamp with time zone
+    ,nas_ip inet DEFAULT NULL
+    ,client_ip inet DEFAULT NULL
     );
 
 CREATE TABLE IF NOT EXISTS client_port_owner (
-     client_id integer PRIMARY KEY REFERENCES client
+     client_id integer PRIMARY KEY REFERENCES client ON DELETE CASCADE
     ,host_id integer NOT NULL REFERENCES host ON DELETE CASCADE
     ,port_id integer NOT NULL
+    ,client_mac macaddr DEFAULT NULL
     ,update_time timestamp with time zone NOT NULL DEFAULT now()
     ,UNIQUE (host_id, port_id)
+    );
+
+CREATE TABLE IF NOT EXISTS client_igmp_profile_status (
+     client_id integer NOT NULL REFERENCES client ON DELETE CASCADE
+    ,profile_id integer NOT NULL
+    ,active boolean NOT NULL DEFAULT false
+    ,update_time timestamp with time zone NOT NULL DEFAULT now()
+    ,UNIQUE (client_id, profile_id)
+    );
+
+CREATE TABLE IF NOT EXISTS host_snmp_inventory (
+     host_id integer NOT NULL REFERENCES host ON DELETE CASCADE
+    ,sys_oid varchar NOT NULL DEFAULT ''
+    ,sys_descr varchar NOT NULL DEFAULT ''
     );

@@ -1,0 +1,56 @@
+.label {
+    position: relative;
+    display: flex;
+    margin-left: 0px;
+    cursor: pointer;
+}
+
+.label:hover .text {
+    background-color: #222;
+}
+
+.text {
+    flex: 1;
+    border-radius: 3px;
+}
+
+.buttons {
+    display: none;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+
+.buttons > *:hover {
+    background: black;
+    color: white;
+}
+
+.label:hover .buttons {
+    display: block;
+}
+
+.toggle {
+    width: 20px;
+    cursor: pointer;
+    overflow:hidden;
+    margin-right: 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.current > .label > .text {
+    border-left: 1px solid #888;
+    border-bottom: 1px solid #888;
+}
+
+.selected > .label > .text {
+    color: black;
+    background-color: orange;
+}
+
+.item ul {
+    margin-left: 24px;
+}

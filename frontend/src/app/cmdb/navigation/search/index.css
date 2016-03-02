@@ -1,0 +1,8 @@
+.result {
+    border-bottom: 1px solid #888;
+    padding-bottom: 5px;
+}
+
+.result:nth-child(2n + 1) {
+    background-color: #222;
+}

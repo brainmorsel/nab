@@ -1,0 +1,36 @@
+.header, .filters {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+}
+
+.header {
+    border-bottom: 1px solid #555;
+}
+
+.row {
+    display: flex;
+}
+
+.row.odd {
+    background-color: #000;
+}
+
+.row:hover {
+    background-color: #222;
+}
+
+.filter {
+    display: flex;
+    overflow: hidden;
+}
+.filter > * {
+    flex: 1;
+}
+
+.row.dimm, .row.dimm a {
+   color: #777;
+}
