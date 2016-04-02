@@ -9,16 +9,44 @@ import click
 import aiopg
 import psycopg2
 from aiohttp import web
+from autobahn.wamp.types import PublishOptions
 
 from .. import conf
 from ..wamp import ApplicationSession, ApplicationRunner
 
 
-class EventsHandler:
-    def __init__(self, db, wamp):
-        self.db = db
-        self.wamp = wamp
+class MyComponent(ApplicationSession):
+    def __init__(self, config=None, app_cfg=None, loop=None):
+        ApplicationSession.__init__(self, config)
+
+        self.loop = loop
+        self.app_cfg = app_cfg
+        self.db = None
+        self.webserver = WebServer(self, loop)
+
         self._client_id_cache = {}
+
+    async def onJoin(self, details):
+        logging.info("Session joined.")
+        self.db = await aiopg.create_pool(**self.app_cfg.database.__dict__)
+        try:
+            await self.subscribe(self.handle_session_start, 'events.client.session.start')
+            await self.subscribe(self.handle_session_stop, 'events.client.session.stop')
+            await self.subscribe(self.handle_port_owner_update, 'events.client.port.update')
+            await self.subscribe(self.handle_client_ip_update, 'events.client.ip.update')
+            await self.subscribe(self.handle_client_igmp_update, 'events.client.igmp_profile.update')
+        except Exception as e:
+            logging.warning("could not subscribe to topic: {0}".format(e))
+
+        logging.info('Start web server...')
+        await self.webserver.start()
+
+    def onClose(self, wasClean):
+        logging.info('exit clean: {0}'.format(wasClean))
+        if not wasClean:
+            self.loop.stop()
+        logging.info('Stop web server...')
+        self.loop.create_task(self.webserver.stop())
 
     async def _get_client_id(self, client_name):
         try:
@@ -200,54 +228,6 @@ class EventsHandler:
                 })
 
 
-async def handle_post_events_smartasr(request):
-    ev = request.app.ev_handler
-    result = {'success': False, 'error': 'Incorrect request.'}
-    if request.method == 'POST' and request.content_type == 'application/json':
-        data = await request.json()
-
-        try:
-            for event in data['events']:
-                ev_type = event['event']
-                if ev_type == 'session-start':
-                    await ev.handle_session_start(event)
-                elif ev_type == 'session-stop':
-                    await ev.handle_session_stop(event)
-                elif ev_type == 'port-owner-update':
-                    await ev.handle_port_owner_update(event)
-                elif ev_type == 'client-ip-update':
-                    await ev.handle_client_ip_update(event)
-                elif ev_type == 'client-igmp-update':
-                    await ev.handle_client_igmp_update(event)
-
-        except Exception:
-            logging.error('Error {0}\n{1}'.format(event, traceback.format_exc()))
-
-    return web.Response(text=json.dumps(result), content_type='application/json')
-
-
-class MyComponent(ApplicationSession):
-    def __init__(self, config=None, app_cfg=None, loop=None):
-        ApplicationSession.__init__(self, config)
-
-        self.loop = loop
-        self.app_cfg = app_cfg
-        self.webserver = WebServer(self, loop)
-
-    async def onJoin(self, details):
-        logging.info("Session joined.")
-
-        logging.info('Start web server...')
-        await self.webserver.start()
-
-    def onClose(self, wasClean):
-        logging.info('exit clean: {0}'.format(wasClean))
-        if not wasClean:
-            self.loop.stop()
-        logging.info('Stop web server...')
-        self.loop.create_task(self.webserver.stop())
-
-
 class WebServer:
     def __init__(self, wamp, loop):
         self._srv = None
@@ -258,16 +238,12 @@ class WebServer:
         self.app_cfg = wamp.app_cfg
 
     async def start(self):
-        app = web.Application()
-        self.app = app
+        self.app = web.Application()
+        self.app.wamp = self.wamp
 
-        app.wamp = self.wamp
-        app.db = await aiopg.create_pool(**self.app_cfg.database.__dict__)
-        app.ev_handler = EventsHandler(app.db, app.wamp)
+        self.app.router.add_route('POST', '/smartasr', self.handle_post_events)
 
-        app.router.add_route('POST', '/smartasr', handle_post_events_smartasr)
-
-        self._handler = app.make_handler()
+        self._handler = self.app.make_handler()
         self._srv = await self._loop.create_server(
             self._handler,
             self.app_cfg.http.listen,
@@ -278,6 +254,30 @@ class WebServer:
         self._srv.close()
         await self._srv.wait_closed()
         await self.app.finish()
+
+    async def handle_post_events(self, request):
+        result = {'success': False, 'error': 'Incorrect request.'}
+        if request.method == 'POST' and request.content_type == 'application/json':
+            data = await request.json()
+            try:
+                for event in data['events']:
+                    print('try to send event', event)
+                    ev_type = event['event']
+                    if ev_type == 'session-start':
+                        self.wamp.publish('events.client.session.start', event, options=PublishOptions(exclude_me=False))
+                    elif ev_type == 'session-stop':
+                        self.wamp.publish('events.client.session.stop', event, options=PublishOptions(exclude_me=False))
+                    elif ev_type == 'port-owner-update':
+                        self.wamp.publish('events.client.port.update', event, options=PublishOptions(exclude_me=False))
+                    elif ev_type == 'client-ip-update':
+                        self.wamp.publish('events.client.ip.update', event, options=PublishOptions(exclude_me=False))
+                    elif ev_type == 'client-igmp-update':
+                        self.wamp.publish('events.client.igmp_profile.update', event, options=PublishOptions(exclude_me=False))
+
+            except Exception:
+                logging.error('Error {0}\n{1}'.format(event, traceback.format_exc()))
+
+        return web.Response(text=json.dumps(result), content_type='application/json')
 
 
 @click.command()
