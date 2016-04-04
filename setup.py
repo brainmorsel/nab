@@ -11,7 +11,7 @@ setup(
         'aiohttp==0.19.0',
         'aiohttp-session==0.3.0',
         'aiohttp-cors==0.2.0',
-        'cryptography==1.1.1',
+        'cryptography==1.3.1',
         'aiohttp-jinja2==0.6.2',
         'autobahn==0.10.9',
         'PyYAML==3.11',
