@@ -25,5 +25,6 @@ setup(
         nab-snmp-poller=nwaddrbook.scripts.snmp_poller:cli
         nab-events-sink-http=nwaddrbook.scripts.events_sink_http:cli
         nab-smartasr-iptv-service-checker=nwaddrbook.scripts.smartasr_iptv_service_checker:cli
+        nab-onyma-events-collector=nwaddrbook.scripts.onyma_events_collector:cli
     ''',
     )
