@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "NODE_ENV=production webpack --progress --profile --colors --optimize-minimize --optimize-dedupe",
-    "watch": "webpack-dev-server --hot --inline --progress --colors"
+    "watch": "webpack-dev-server --hot --inline --progress --colors --port 8008"
   },
   "author": "The Invoice",
   "license": "ISC",
