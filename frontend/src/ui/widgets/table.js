@@ -41,10 +41,10 @@ export class Table extends Component {
             )}
         style={rowStyle}
         >
-        { columns.map(c => {
+        { columns.map((c, idx) => {
           const style = this.getSharedStyle(c);
           const render = c.render || this.defaultFieldRender;
-          return render({key: c.field, style}, item[c.field], item, idx, data);
+          return render({key: c.field+idx, style}, item[c.field], item, idx, data);
         })}
       </div>
     );
@@ -57,12 +57,12 @@ export class Table extends Component {
   defaultHeaderRender(columns) {
     return (
       <div className={styles.header}>
-        { columns.map(c => {
+        { columns.map((c, idx) => {
           const style = {
             ...this.getSharedStyle(c),
           };
           return (
-            <div key={c.field} style={style}>
+            <div key={c.field + idx} style={style}>
               {c.label || c.field}
             </div>
           );
@@ -74,12 +74,12 @@ export class Table extends Component {
   defaultFiltersRender(columns) {
     return (
       <div className={styles.filters}>
-        { columns.map(c => {
+        { columns.map((c, idx) => {
           const style = {
             ...this.getSharedStyle(c),
           };
           return (
-            <div key={c.field} style={style} className={styles.filter}>
+            <div key={c.field + idx} style={style} className={styles.filter}>
               {c.filter}
             </div>
           );
