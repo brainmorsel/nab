@@ -1,27 +1,3 @@
-.item {
-    display: flex;
-}
-
-.item > * {
-    flex: 1;
-}
-
-.item:hover {
-    background-color: #DDD;
-}
-
-.fieldPort {
-    max-width: 50px;
-}
-
-.fieldSession {
-    max-width: 25px;
-}
-
-.fieldIPTV {
-    max-width: 25px;
-}
-
 .active {
     color: #383;
 }

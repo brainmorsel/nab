@@ -36,7 +36,7 @@ class MyComponent(ApplicationSession):
             await self.subscribe(self.handle_client_ip_update, 'events.client.ip.update')
             await self.subscribe(self.handle_client_igmp_update, 'events.client.igmp_profile.update')
         except Exception as e:
-            logging.warning("could not subscribe to topic: {0}".format(e))
+            logging.error("could not subscribe to topic: {0}".format(e))
 
         logging.info('Start web server...')
         await self.webserver.start()
@@ -257,12 +257,14 @@ class WebServer:
 
     async def handle_post_events(self, request):
         result = {'success': False, 'error': 'Incorrect request.'}
+        logging.debug('handle_post_events: got HTTP POST request')
         if request.method == 'POST' and request.content_type == 'application/json':
             data = await request.json()
             try:
+                logging.debug('handle_post_events: get {0} events in batch'.format(len(data['events'])))
                 for event in data['events']:
-                    print('try to send event', event)
                     ev_type = event['event']
+                    logging.debug('handle_post_events: dispatch event {0}'.format(ev_type))
                     if ev_type == 'session-start':
                         self.wamp.publish('events.client.session.start', event, options=PublishOptions(exclude_me=False))
                     elif ev_type == 'session-stop':

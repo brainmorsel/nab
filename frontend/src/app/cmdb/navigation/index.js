@@ -50,7 +50,6 @@ const selector = createSelector(
 @connect(selector, mapActionsToProps)
 export class Navigation extends Component {
   navigateTo(item) {
-    console.log('CLICK', item);
     if (item && item.type == 'group') {
       this.props.navigate(urls.cmdb.group.show(item.group_id));
     }

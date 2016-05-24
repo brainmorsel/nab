@@ -312,6 +312,7 @@ export const loadSearchResults = (query, delay=0.5) => {
                       unloaded_groups.push(r.group_id);
                     }
                     break;
+                  case 'client':
                   case 'host':
                   case 'host_ip':
                     if (!state.app.cmdb.hosts[r.host_id]) {

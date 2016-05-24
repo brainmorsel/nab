@@ -14,6 +14,7 @@ import * as actions from 'app/cmdb/actions';
 import styles from './clients.css';
 import { View } from 'ui/layout';
 import Icon from 'ui/widgets/icon';
+import { Table } from 'ui/widgets/table';
 
 
 function mapActionsToProps(dispatch) {
@@ -46,52 +47,81 @@ export class HostClients extends Component {
     loadHostClients(host_id);
   }
 
+  componentWillReceiveProps(nextProps) {
+    const { host_id, actions: { loadHostClients } } = this.props;
+    if (host_id != nextProps.host_id) {
+      loadHostClients(nextProps.host_id);
+    }
+  }
+
   render() {
     const { host_id, host, ...other } = this.props;
 
-    return (
-      <View {...other} style={{overflowY: 'scroll'}}>
-        <div>
-          <div  className={styles.item}>
-            <span className={styles.fieldPort}>Port</span>
-            <span>Type</span>
-            <span>Name</span>
-            <span>Description</span>
-            <span>MAC</span>
-            <span>Last session IP</span>
-            <span className={styles.fieldSession} title='Session'>S</span>
-            <span className={styles.fieldIPTV} title='IPTV'>TV</span>
-            <span>Last update</span>
+    const columns = [
+      {
+        field: 'port_id',
+        label: 'Port',
+        width: '50px',
+      },
+      {
+        field: 'client_type_name',
+        label: 'Type',
+        width: '100px',
+      },
+      {
+        field: 'name',
+        width: '150px',
+      },
+      {
+        field: 'description',
+      },
+      {
+        field: 'client_mac',
+        render: (props, value) => (<div {...props}>{value.toUpperCase()}</div>),
+      },
+      {
+        field: 'session',
+        label: 'Last session IP',
+        render: (props, value) => (<div {...props}>{value.client_ip}</div>),
+      },
+      {
+        field: 'session',
+        label: 'S',
+        width: '32px',
+        render: (props, value) => {
+          const isSessionActive = !value.time_end;
+          return <div {...props}
+            className={isSessionActive ? styles.active : styles.inactive}
+            title={value.time_start + ' - ' + (value.time_end || 'now')}
+            >
+            <Icon name='plug'/>
           </div>
-          {host && host.clients && host.clients.map(client => {
-            const isSessionActive = !client.session.time_end;
-            const isHasTV = !!client.igmp.profile_id;
-            const isActiveTV = isHasTV && client.igmp.active;
-            return (
-              <div key={client.port_id} className={styles.item}>
-                <span className={styles.fieldPort}>{client.port_id}</span>
-                <span>{client.client_type_name}</span>
-                <span>{client.name}</span>
-                <span>{client.description}</span>
-                <span>{client.client_mac.toUpperCase()}</span>
-                <span>{client.session.client_ip}</span>
-                <span
-                  className={classNames(styles.fieldSession, isSessionActive ? styles.active : styles.inactive)}
-                  title={client.session.time_start + ' - ' + (client.session.time_end || 'now')}
-                  >
-                  <Icon name='plug'/>
-                </span>
-                <span
-                  className={classNames(styles.fieldIPTV, isActiveTV ? styles.active : styles.inactive)}
-                  title={isHasTV ? 'last change '+client.igmp.update_time : ''}
-                  >
-                  {isHasTV && <Icon name='tv' />}
-                </span>
-                <span>{client.update_time}</span>
-              </div>
-            );
-          })}
-        </div>
+        },
+      },
+      {
+        field: 'igmp',
+        label: 'TV',
+        width: '32px',
+        render: (props, value) => {
+          const isHasTV = !!value.profile_id;
+          const isActiveTV = isHasTV && value.active;
+          return <div {...props}
+            className={isActiveTV ? styles.active : styles.inactive}
+            title={isHasTV ? 'last change '+value.update_time : ''}
+            >
+            {isHasTV && <Icon name='tv' />}
+          </div>
+        },
+      },
+      {
+        field: 'update_time',
+        width: '180px',
+      },
+    ];
+
+    return (
+      <View {...other}>
+          {host && host.clients && <Table columns={ columns } data={ host.clients } />}
       </View>
     );
   }
