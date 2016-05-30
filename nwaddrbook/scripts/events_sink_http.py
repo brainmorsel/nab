@@ -1,9 +1,8 @@
 import logging
-import asyncio
-import signal
 import json
 from datetime import datetime
-import traceback
+import asyncio
+from concurrent.futures import CancelledError
 
 import click
 import aiopg
@@ -11,8 +10,8 @@ import psycopg2
 from aiohttp import web
 from autobahn.wamp.types import PublishOptions
 
-from .. import conf
-from ..wamp import ApplicationSession, ApplicationRunner
+from . import script_wamp_runner
+from ..wamp import ApplicationSession
 
 
 class MyComponent(ApplicationSession):
@@ -25,28 +24,32 @@ class MyComponent(ApplicationSession):
         self.webserver = WebServer(self, loop)
 
         self._client_id_cache = {}
+        self._client_data_cache = {}
 
     async def onJoin(self, details):
-        logging.info("Session joined.")
+        logging.info('Session joined.')
         self.db = await aiopg.create_pool(**self.app_cfg.database.__dict__)
         try:
-            await self.subscribe(self.handle_session_start, 'events.client.session.start')
-            await self.subscribe(self.handle_session_stop, 'events.client.session.stop')
-            await self.subscribe(self.handle_port_owner_update, 'events.client.port.update')
-            await self.subscribe(self.handle_client_ip_update, 'events.client.ip.update')
-            await self.subscribe(self.handle_client_igmp_update, 'events.client.igmp_profile.update')
-        except Exception as e:
-            logging.error("could not subscribe to topic: {0}".format(e))
+            await self.register(self.handle_session_start, 'events.client.session.start')
+            await self.register(self.handle_session_stop, 'events.client.session.stop')
+            await self.register(self.handle_port_owner_update, 'events.client.port.update')
+            await self.register(self.handle_client_ip_update, 'events.client.ip.update')
+            await self.register(self.handle_client_igmp_update, 'events.client.igmp_profile.update')
+        except Exception:
+            logging.exception('could not subscribe to topic')
 
         logging.info('Start web server...')
         await self.webserver.start()
 
     def onClose(self, wasClean):
-        logging.info('exit clean: {0}'.format(wasClean))
+        logging.info('exit clean: %s', wasClean)
         if not wasClean:
             self.loop.stop()
         logging.info('Stop web server...')
         self.loop.create_task(self.webserver.stop())
+
+    async def _load_client_data(self):
+        pass
 
     async def _get_client_id(self, client_name):
         try:
@@ -138,6 +141,7 @@ class MyComponent(ApplicationSession):
                         UPDATE client_port_owner
                         SET client_id = %(client_id)s
                            ,client_mac = %(client_mac)s
+                           ,update_time = now()
                         WHERE host_id = %(host_id)s AND port_id = %(port)s
                     '''
                     await cur.execute(sql_update_port_data, {
@@ -229,6 +233,14 @@ class MyComponent(ApplicationSession):
 
 
 class WebServer:
+    HTTP_TO_WAMP_EV_MAP = {
+        'session-start': 'events.client.session.start',
+        'session-stop': 'events.client.session.stop',
+        'port-owner-update': 'events.client.port.update',
+        'client-ip-update': 'events.client.ip.update',
+        'client-igmp-update': 'events.client.igmp_profile.update',
+    }
+
     def __init__(self, wamp, loop):
         self._srv = None
         self._handler = None
@@ -236,6 +248,9 @@ class WebServer:
         self.app = None
         self.wamp = wamp
         self.app_cfg = wamp.app_cfg
+
+        #self._events = asyncio.LifoQueue()  # в первую очередь обрабатывать самые свежие события
+        self._events = asyncio.Queue()
 
     async def start(self):
         self.app = web.Application()
@@ -249,35 +264,37 @@ class WebServer:
             self.app_cfg.http.listen,
             int(self.app_cfg.http.port))
 
+        self._ev_consumer_task = asyncio.ensure_future(self._events_consumer())
+
     async def stop(self):
         await self._handler.finish_connections(1.0)
         self._srv.close()
         await self._srv.wait_closed()
         await self.app.finish()
+        self._ev_consumer_task.cancel()
+
+    async def _events_consumer(self):
+        while True:
+            try:
+                event = await self._events.get()
+                ev_type = event['event']
+                wamp_ev = self.HTTP_TO_WAMP_EV_MAP[ev_type]
+                await self.wamp.call(wamp_ev, event)
+                self._events.task_done()
+            except CancelledError:
+                logging.debug('_events_consumer: stoped, lost %d items in queue', self._events.qsize())
+                return
 
     async def handle_post_events(self, request):
         result = {'success': False, 'error': 'Incorrect request.'}
-        logging.debug('handle_post_events: got HTTP POST request')
         if request.method == 'POST' and request.content_type == 'application/json':
             data = await request.json()
             try:
-                logging.debug('handle_post_events: get {0} events in batch'.format(len(data['events'])))
+                logging.debug('handle_post_events: queue size %d (+%d)', self._events.qsize(), len(data['events']))
                 for event in data['events']:
-                    ev_type = event['event']
-                    logging.debug('handle_post_events: dispatch event {0}'.format(ev_type))
-                    if ev_type == 'session-start':
-                        self.wamp.publish('events.client.session.start', event, options=PublishOptions(exclude_me=False))
-                    elif ev_type == 'session-stop':
-                        self.wamp.publish('events.client.session.stop', event, options=PublishOptions(exclude_me=False))
-                    elif ev_type == 'port-owner-update':
-                        self.wamp.publish('events.client.port.update', event, options=PublishOptions(exclude_me=False))
-                    elif ev_type == 'client-ip-update':
-                        self.wamp.publish('events.client.ip.update', event, options=PublishOptions(exclude_me=False))
-                    elif ev_type == 'client-igmp-update':
-                        self.wamp.publish('events.client.igmp_profile.update', event, options=PublishOptions(exclude_me=False))
-
+                    await self._events.put(event)
             except Exception:
-                logging.error('Error {0}\n{1}'.format(event, traceback.format_exc()))
+                logging.exception('Error on event %s', event)
 
         return web.Response(text=json.dumps(result), content_type='application/json')
 
@@ -285,30 +302,4 @@ class WebServer:
 @click.command()
 @click.option('-c', '--config', 'config_path', type=click.Path(exists=True, readable=True, dir_okay=False), required=True)
 def cli(config_path):
-    app_cfg = conf.load(config_path)
-
-    loop = asyncio.get_event_loop()
-    try:
-        loop.add_signal_handler(signal.SIGTERM, loop.stop)
-    except NotImplementedError:
-        # signals are not available on Windows
-        pass
-
-    logging.info('Init...')
-    wamp_runner = ApplicationRunner(
-        url=app_cfg.wamp.url,
-        realm=app_cfg.wamp.realm,
-        loop=loop
-    )
-    wamp_runner.run(MyComponent, app_cfg)
-
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        wamp_runner.stop()
-        # дожидаемся завершения всех оставшихся задач и выходим.
-        pending = asyncio.Task.all_tasks()
-        loop.run_until_complete(asyncio.gather(*pending))
-        loop.close()
+    script_wamp_runner(MyComponent, config_path)
