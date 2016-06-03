@@ -118,7 +118,7 @@ export class SearchResults extends Component {
                   {
                   const host = hosts[r.host_id];
                   return <li key={'client'+r.client_id}><Icon name='user' fixedWidth/>
-                    {r.name} @ {host && <Link to={urls.cmdb.host.clients(r.host_id)}><HostLabel item={host}/> (port: {r.port_id})</Link>}</li>
+                    {r.name} @ {host && <Link to={urls.cmdb.host.clients(r.host_id)}><HostLabel item={host}/> (port: {r.port_id} mac: {r.client_mac})</Link>}</li>
                   }
                 case '_end_marker':
                   return <li key='_end_marker'>And {r.remaining_count} more results skipped...</li>

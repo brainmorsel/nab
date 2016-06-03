@@ -821,19 +821,20 @@ class Handlers:
                     'name': name,
                 })
             sql = '''
-                SELECT c.client_id, c.name, cpo.host_id, cpo.port_id
+                SELECT c.client_id, c.name, cpo.host_id, cpo.port_id, cpo.client_mac
                 FROM client c
                 LEFT JOIN client_port_owner cpo ON c.client_id = cpo.client_id
-                WHERE c.name ILIKE %(q)s ORDER BY c.name
+                WHERE c.name ILIKE %(q)s OR cpo.client_mac::text ILIKE %(q)s ORDER BY c.name
             '''
             await cur.execute(sql, {'q': _q})
-            for client_id, name, host_id, port_id in await cur.fetchall():
+            for client_id, name, host_id, port_id, client_mac in await cur.fetchall():
                 result.append({
                     'type': 'client',
                     'client_id': client_id,
                     'name': name,
                     'host_id': host_id,
                     'port_id': port_id,
+                    'client_mac': client_mac,
                 })
         limit = 100
         end_marker = []
