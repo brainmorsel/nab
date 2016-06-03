@@ -16,7 +16,8 @@ setup(
         'autobahn==0.10.9',
         'PyYAML==3.11',
         'ldap3==0.9.9.3',
-        'pysnmp==4.3.1'
+        'pysnmp==4.3.1',
+        'stomp.py==4.1.11'
     ],
     entry_points='''
         [console_scripts]

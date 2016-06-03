@@ -1,6 +1,7 @@
 import logging
 import json
 import time
+import asyncio
 
 import stomp
 import click
@@ -27,9 +28,13 @@ class MyComponent(ApplicationSession):
                 ack='client', headers={'activemq.prefetchSize': self.app_cfg.stomp.prefetchSize})
 
     def onClose(self, wasClean):
-        logging.info('exit clean: {0}'.format(wasClean))
+        logging.info('exit clean: %s', wasClean)
         if not wasClean:
             self.loop.stop()
+
+    def send_event(self, ev_name, ev_data):
+        logging.debug('send event %s %s', ev_name, ev_data)
+        asyncio.ensure_future(self.call(ev_name, ev_data))
 
 
 def nil2none(obj):
@@ -45,7 +50,7 @@ class MyListener(stomp.ConnectionListener):
         self.wamp = wamp
 
     def on_error(self, headers, message):
-        logging.error('received an error "%s"' % message)
+        logging.error('received an error "%s"', message)
 
     def on_message(self, headers, message):
         data = json.loads(message)
@@ -65,7 +70,7 @@ class MyListener(stomp.ConnectionListener):
             if e_status is not None:
                 self.handle_client_igmp_update(e_login, int(e_status))
 
-        ack = False
+        ack = True
         if ack:
             self.conn.ack(id=headers['message-id'], subscription=headers['subscription'])
 
@@ -84,7 +89,7 @@ class MyListener(stomp.ConnectionListener):
                 'switch_mac': None,
                 'port': port,
             }
-            self.wamp.publish('events.client.port.update', ev)
+            self.wamp.send_event('events.client.port.update', ev)
 
     def handle_client_igmp_update(self, client_name, onyma_status):
         profile_id = 2
@@ -95,7 +100,7 @@ class MyListener(stomp.ConnectionListener):
             'client_name': client_name,
             'active': is_active,
         }
-        self.wamp.publish('events.client.igmp_profile.update', ev)
+        self.wamp.send_event('events.client.igmp_profile.update', ev)
 
 
 @click.command()
